@@ -9,7 +9,7 @@ from .CentralWdiget import CentralWidget
 from .AnalyzerWrapper import AnalyzerWrapper
 from .VTKWidget import VTKWidget
 from .JumpChartWidget import JumpChartWidget
-from .MsdChartWidget import MsdChartWidget
+from .MsdChartWidget import MsdChartWidget, MSDWidget
 
 
 class MainWindow(QMainWindow):
@@ -86,19 +86,8 @@ class MainWindow(QMainWindow):
             self.central_widget.setActiveSubWindow(window)
             return
 
-        splitter = QSplitter(self)
-        vtk_widget = VTKWidget()
-        vtk_widget.add_track(track)
-
-        vtk_widget.render_lines()
-
-        chart = MsdChartWidget(track)
-        # chart.bar_clicked.connect(vtk_widget.display_points)
-
-        splitter.addWidget(vtk_widget)
-        splitter.addWidget(chart)
-        splitter.setWindowTitle(track.name)
-        self.central_widget.add_widget(splitter)
+        chart = MSDWidget(track, track.name)
+        self.central_widget.add_widget(chart)
 
     def display_all_channels(self, channels):
         vtk_widget = VTKWidget(self)
