@@ -24,11 +24,13 @@ class CoTrafficWidget(QMainWindow):
             for channel in self.channels:
                 track_df = group[[f'X{channel.suffix}', f'Y{channel.suffix}', f'Z{channel.suffix}',
                                  f'trackid{channel.suffix}', f'time']]
-                track_df = track_df.rename(columns={f'X{channel.suffix}': 'X', f'Y{channel.suffix}': 'Y',
-                                                    f'Z{channel.suffix}': 'Z',
-                                                    f'trackid{channel.suffix}': 'trackid'})
-                track_id = list(track_df[f'trackid'])[0]
-                tracks.append(Track(track_id=track_id, name=channel.name, color=channel.base_color, raw_data=track_df))
+                track_df = track_df.rename(columns={f'X{channel.suffix}': f'X{channel.suffix}',
+                                                    f'Y{channel.suffix}': f'Y{channel.suffix}',
+                                                    f'Z{channel.suffix}': f'Z{channel.suffix}',
+                                                    f'trackid{channel.suffix}': f'trackid{channel.suffix}'})
+                track_id = list(track_df[f'trackid{channel.suffix}'])[0]
+                tracks.append(Track(track_id=track_id, name=channel.name, color=channel.base_color, raw_data=track_df,
+                                    suffix=channel.suffix))
             self.pairs[name] = tracks
 
             self.list_widget.addItem(list_item)

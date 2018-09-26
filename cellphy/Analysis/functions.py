@@ -3,7 +3,8 @@ from scipy import optimize
 import operator
 import pandas as pd
 import matplotlib.pyplot as plt
-
+from functools import reduce
+import itertools
 
 def distance(a, b):
     return np.sqrt(np.sum((np.array(a) - np.array(b)) ** 2))
@@ -121,8 +122,7 @@ def compare_tracks(track_a, track_b, suffix_a, suffix_b, _radius):
         return check_direction
 
     # get the points which are on same time point
-    same_time_points = track_a.get_values().merge(track_b.get_values(), on='time',
-                                                  suffixes=[suffix_a, suffix_b])
+    same_time_points = track_a.get_values().merge(track_b.get_values(), on='time')
 
     if same_time_points.index.size:
         # if they are on same time point
@@ -168,6 +168,29 @@ def compare_tracks(track_a, track_b, suffix_a, suffix_b, _radius):
                 #     result = result.append(_pair)
     return result
 
+
+def compare_all_tracks(tracks, suffixes, radius):
+    # do the pairing
+    pairs = {}
+    for track_a, track_b in itertools.combinations(tracks, 2):
+        # get the points which are on same time point
+        pair = compare_tracks(track_a, track_b, track_a.suffix, track_b.suffix, radius)
+        if not pair.empty:
+            pairs[f'{track_a.suffix}-{track_b.suffix}'] = pair
+
+    # for p in list(pairs.values()):
+    #     print(p)
+    # union of the pairs
+    pair_union = None
+
+    if len(pairs) > 1:
+        pair_union = reduce(lambda left, right: pd.merge(left, right, on='time'), list(pairs.values()))
+        identity = []
+        for t in tracks:
+            identity.append(f'{t.track_id}_{t.suffix}')
+        pair_union['identity'] = ','.join(identity)
+
+    return pairs, pair_union
 
 def split_df(_a):
     result = []

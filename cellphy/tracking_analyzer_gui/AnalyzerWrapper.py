@@ -10,7 +10,7 @@ from .CoTrafficWidget import CoTrafficWidget
 import pandas as pd
 import time
 import itertools
-from cellphy.Analysis.functions import compare_tracks
+from cellphy.Analysis.functions import compare_tracks, compare_all_tracks
 
 
 class AnalyzerWrapper(QMainWindow):
@@ -73,15 +73,25 @@ class AnalyzerWrapper(QMainWindow):
         self.display_channel_msd.emit(channel)
 
     def compare_tracks(self, radius):
-        thread = CompareThread(self.channels, radius)
-        thread.result_ready.connect(self.create_co_traffic_widgets)
-        thread.output.connect(self.parent.print)
-        thread.status.connect(self.parent.status_bar.showMessage)
-        thread.finished.connect(self.parent.status_bar.currentMessage)
-        thread.finished.connect(thread.deleteLater)
+        thread_pair = CompareThread(self.channels, radius)
+        thread_pair.result_ready.connect(self.create_common_co_traffic_widget)
+        thread_pair.output.connect(self.parent.print)
+        thread_pair.status.connect(self.parent.status_bar.showMessage)
+        thread_pair.finished.connect(self.parent.status_bar.currentMessage)
+        thread_pair.finished.connect(thread_pair.deleteLater)
 
-        thread.start()
-        self.threads.append(thread)
+        thread_pair.start()
+        self.threads.append(thread_pair)
+
+        # thread_all = CompareAllThread(self.channels, radius)
+        # thread_all.result_ready.connect(self.create_common_co_traffic_widget)
+        # thread_all.output.connect(self.parent.print)
+        # thread_all.status.connect(self.parent.status_bar.showMessage)
+        # thread_all.finished.connect(self.parent.status_bar.currentMessage)
+        # thread_all.finished.connect(thread_all.deleteLater)
+        #
+        # thread_all.start()
+        # self.threads.append(thread_all)
 
     def create_co_traffic_widgets(self, results, radius):
         for result in results:
@@ -89,6 +99,7 @@ class AnalyzerWrapper(QMainWindow):
             channel_b = result['c_b']
             pair = result['pair']
             title = f'Radius - {radius} [{channel_a.name} & {channel_b.name}]'
+            pair.to_csv(f'./{title}')
             cotraffic_widget = CoTrafficWidget(pair, channel_a, channel_b, title)
             cotraffic_widget.pair_clicked.connect(self.__display_pair)
             cotraffic_widget.msd_clicked.connect(self.__msd_all_tracks)
@@ -97,8 +108,16 @@ class AnalyzerWrapper(QMainWindow):
         self.tab_widget.setCurrentIndex(0)
         self.tool_bar.enable_analyze_btn()
 
+    def create_common_co_traffic_widget(self, pairs, union, radius):
+        print(f'saving common file for radius {radius}')
+        for key, _ in pairs.items():
+            print(f'>> pair {key}')
+        print('saving union')
+        union.to_csv('./union_radius.csv')
+
 
 class CompareThread(QThread):
+    print('creating compare thread')
     result_ready = QtCore.pyqtSignal(list, float)
     status = QtCore.pyqtSignal(str)
     output = QtCore.pyqtSignal(str)
@@ -111,7 +130,7 @@ class CompareThread(QThread):
     def run(self):
         results = []
         start_time = time.time()
-        self.output.emit(f'> started processing for {self.radius}\n')
+        self.output.emit(f'> started processing for Compare thread {self.radius}\n')
         for channel_a, channel_b in itertools.combinations(self.channels, 2):
             rendered_df = pd.DataFrame()
             self.output.emit(f'  > processing channels {channel_a.name} & {channel_b.name}\n')
@@ -122,8 +141,41 @@ class CompareThread(QThread):
                                                                     channel_b.suffix, self.radius))
             if not rendered_df.empty:
                 results.append({'pair': rendered_df.copy(), 'c_a': channel_a, 'c_b': channel_b})
-        self.output.emit(f'> done processing for radius : {self.radius} in {time.time() - start_time}\n')
+        self.output.emit(f'> done processing (pair thread) for radius : {self.radius} in {time.time() - start_time}\n')
         self.result_ready.emit(results, self.radius)
+
+
+class CompareAllThread(QThread):
+    result_ready = QtCore.pyqtSignal(pd.DataFrame, pd.DataFrame, float)
+    status = QtCore.pyqtSignal(str)
+    output = QtCore.pyqtSignal(str)
+
+    def __init__(self, channels, radius, parent=None):
+        QThread.__init__(self, parent)
+        self.channels = channels
+        self.radius = radius
+
+    def run(self):
+
+        start_time = time.time()
+        self.output.emit(f'> started processing (all thread) for {self.radius}\n')
+        tracks_tuple = []
+        suffixes = []
+        results_pairs = {}
+        results_all = pd.DataFrame()
+        for channel in self.channels:
+            tracks_tuple.append(channel.tracks)
+            suffixes.append(channel.suffix)
+        for tracks in itertools.product(*tracks_tuple):
+            pairs, pair_union = compare_all_tracks(tracks, suffixes, self.radius)
+            for pair_id, pair in pairs.items():
+                if results_pairs.get(pair_id, None) is None:
+                    results_pairs[pair_id] = pd.DataFrame()
+                results_pairs[pair_id].append(pair)
+            results_all.append(pair_union)
+            self.status.emit('> comparing track ' + ','.join([t.__str__() for t in tracks]))
+        self.output.emit(f'> done processing (all thread) for radius : {self.radius} in {time.time() - start_time}\n')
+        self.result_ready.emit(results_pairs, results_all, self.radius)
 
 
 class AnalysisToolWidget(QToolBar):

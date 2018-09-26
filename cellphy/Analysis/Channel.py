@@ -46,7 +46,8 @@ class Channel(PARENT):
             self.load_data(self.data_file)
 
     def load_data(self, data_file):
-        names = ['X', 'Y', 'Z', 'unit', 'category', 'collection', 'time', 'trackid', 'id']
+        names = [f'X{self.suffix}', f'Y{self.suffix}', f'Z{self.suffix}', 'unit', 'category', 'collection', 'time',
+                 f'trackid{self.suffix}', 'id']
         self.name = PurePath(data_file).name
         self.raw_data = pd.read_csv(data_file, names=names, header=self.header)
         self.raw_data.pop('unit')
@@ -54,13 +55,13 @@ class Channel(PARENT):
         self.raw_data.pop('collection')
         self.raw_data.pop('id')
 
-        self.track_ids = self.raw_data.trackid.unique()
+        self.track_ids = self.raw_data[f'trackid{self.suffix}'].unique()
 
         self.max_time_point = self.raw_data['time'].max()
 
         for _id in self.track_ids:
-            t = Track(track_id=_id, name=self.name, color=self.base_color,
-                      raw_data=self.raw_data[self.raw_data['trackid'] == _id], parent=self)
+            t = Track(track_id=_id, name=self.name, color=self.base_color, suffix=self.suffix,
+                      raw_data=self.raw_data[self.raw_data[f'trackid{self.suffix}'] == _id], parent=self)
 
             self.tracks.append(t)
             self.tracks_hash_map[_id] = t
