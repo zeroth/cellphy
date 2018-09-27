@@ -10,6 +10,7 @@ from .AnalyzerWrapper import AnalyzerWrapper
 from .VTKWidget import VTKWidget
 from .JumpChartWidget import JumpChartWidget
 from .MsdChartWidget import MsdChartWidget, MSDWidget
+from .IEDWidget import IEDWidget
 
 
 class MainWindow(QMainWindow):
@@ -75,7 +76,7 @@ class MainWindow(QMainWindow):
         analyzer_widget.track_clicked.connect(self.display_track)
         analyzer_widget.render_all_channels.connect(self.display_all_channels)
         analyzer_widget.render_pair.connect(self.display_pair)
-        analyzer_widget.display_msd_tracks.connect(self.display_msd_tracks)
+        # analyzer_widget.display_msd_tracks.connect(self.display_msd_tracks)
         analyzer_widget.display_channel_msd.connect(self.display_channel)
         self.analyzer_container.addTab(analyzer_widget, analyzer_widget.title)
         self.print('> done loading channels\n')
@@ -187,8 +188,11 @@ class MainWindow(QMainWindow):
         chart.msd_line_clicked.connect(vtk_widget.highlight_track)
         chart.setWindowTitle(f'MSD {title}')
 
+        ied_widget = IEDWidget(channel)
+
         splitter.addWidget(vtk_widget)
         splitter.addWidget(chart)
+        splitter.addWidget(ied_widget)
         self.central_widget.add_widget(splitter)
 
     def find_mdi_child(self, title):

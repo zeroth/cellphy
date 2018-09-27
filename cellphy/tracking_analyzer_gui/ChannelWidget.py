@@ -8,6 +8,7 @@ from cellphy.Analysis.Channel import Channel
 class ChannelWidget(QMainWindow):
     track_clicked = QtCore.pyqtSignal(Track)
     display_msd_channel = QtCore.pyqtSignal(Channel)
+    display_ied_channel = QtCore.pyqtSignal(Channel)
 
     def __init__(self, channel, parent=None):
         QMainWindow.__init__(self, parent)
@@ -16,7 +17,8 @@ class ChannelWidget(QMainWindow):
 
         self.tool_bar = ToolBarWidget(self)
 
-        self.tool_bar.button_clicked.connect(self.__msd_channel)
+        self.tool_bar.msd_button_clicked.connect(self.__msd_channel)
+        self.tool_bar.ied_button_clicked.connect(self.__ied_channel)
         for _id in self.channel.track_ids:
             list_item = QListWidgetItem()
             _track = self.channel.get_track(float(_id))
@@ -38,37 +40,42 @@ class ChannelWidget(QMainWindow):
     def __msd_channel(self):
         self.display_msd_channel.emit(self.channel)
 
+    def __ied_channel(self):
+        self.display_ied_channel.emit(self.channel)
+
 
 class ToolBarWidget(QToolBar):
     spin_change = QtCore.pyqtSignal(float)
-    button_clicked = QtCore.pyqtSignal()
+    msd_button_clicked = QtCore.pyqtSignal()
+    ied_button_clicked = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         QToolBar.__init__(self, parent)
 
-        self._frame = QFrame()
-        self._frame.setFrameShape(QFrame.StyledPanel)
-        self._frame.setFrameShadow(QFrame.Plain)
-        self._layout = QHBoxLayout(self._frame)
+        # self._frame = QFrame()
+        # self._frame.setFrameShape(QFrame.StyledPanel)
+        # self._frame.setFrameShadow(QFrame.Plain)
+        # self._layout = QHBoxLayout(self._frame)
 
-        self.spin_box = QSpinBox()
-        self.spin_box.setMinimum(0)
-        self.spin_box.setSingleStep(1)
+        # self.spin_box = QSpinBox()
+        # self.spin_box.setMinimum(0)
+        # self.spin_box.setSingleStep(1)
 
-        self.spin_btn = QPushButton('Bin, MSD and Fit')
-        self.spin_btn.clicked.connect(self.spin_btn_clicked)
+        # self.spin_btn = QPushButton('Bin, MSD and Fit')
+        # self.spin_btn.clicked.connect(self.spin_btn_clicked)
 
-        self._layout.addWidget(self.spin_box)
-        self._layout.addWidget(self.spin_btn)
-        self.addSeparator()
-        self._frame.setLayout(self._layout)
+        # self._layout.addWidget(self.spin_box)
+        # self._layout.addWidget(self.spin_btn)
+        # self.addSeparator()
+        # self._frame.setLayout(self._layout)
 
-        self.btn = QPushButton('MSD')
-        self.btn.clicked.connect(self.button_clicked)
+        self.msd_btn = QPushButton('Display')
+        self.msd_btn.clicked.connect(self.msd_button_clicked)
 
-        self.addWidget(self._frame)
-        self.addSeparator()
-        self.addWidget(self.btn)
+        # self.ied_btn = QPushButton('IED')
+        # self.ied_btn.clicked.connect(self.ied_button_clicked)
+
+        self.addWidget(self.msd_btn)
 
     def set_spin(self, value):
         self.spin_box.setValue(value)

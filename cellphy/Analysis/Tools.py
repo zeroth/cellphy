@@ -50,7 +50,7 @@ def analyze_mean_stddev(args):
     time_map = channel.get_time_point_mean_and_stdev()
 
     df = pd.DataFrame.from_dict(time_map, orient='index')
-    df.set_axis(['mean', 'stddev'], axis=1, inplace=True)
+    df.set_axis(['time', 'mean', 'stddev'], axis=1, inplace=True)
     df.to_csv(processed_file)
 
     print(f'total time to analyze {timer()-start_time}')

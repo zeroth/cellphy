@@ -31,8 +31,8 @@ class Track:
         return self.raw_data
 
     def get_position_by_time_point(self, time_point):
-        if time_point in self.time_point_position_map.keys():
-            return self.time_point_position_map[time_point]
+        if time_point in self.time_position_map.keys():
+            return self.time_position_map[time_point]
         else:
             return None
 

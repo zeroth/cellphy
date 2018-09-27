@@ -7,11 +7,11 @@ class CoTrafficWidget(QMainWindow):
     pair_clicked = QtCore.pyqtSignal(TrackPair)
     msd_clicked = QtCore.pyqtSignal(list, str)
 
-    def __init__(self, data, channel_a, channel_b, title = 'Untitled', parent=None):
+    def __init__(self, data, title = 'Untitled', parent=None):
         QMainWindow.__init__(self, parent)
         self.list_widget = QListWidget()
         self.data = data
-        self.channels = [channel_a, channel_b]
+
         self.pairs = dict()
         self.title = title
         # we want to just show top pairs

@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QTabWidget, QWidget, QHBoxLayout, QVBoxLayout, QDoub
 from PyQt5.QtCore import QThread
 from cellphy.Analysis.Channel import Channel
 from cellphy.Analysis.Track import Track
+from cellphy.Analysis.TrackGroups import TrackGroup
 import PyQt5.QtCore as QtCore
 from pathlib import PurePath
 from .ChannelWidget import ChannelWidget
@@ -21,6 +22,7 @@ class AnalyzerWrapper(QMainWindow):
     render_pair = QtCore.pyqtSignal(list)
     display_msd_tracks = QtCore.pyqtSignal(list, str)
     display_channel_msd = QtCore.pyqtSignal(Channel)
+    display_channel_ied = QtCore.pyqtSignal(Channel)
 
     def __init__(self, files, parent=None):
         QMainWindow.__init__(self, parent)
@@ -44,7 +46,10 @@ class AnalyzerWrapper(QMainWindow):
             self.channels.append(channel)
             channel_widget = ChannelWidget(channel, self)
             channel_widget.track_clicked.connect(self.__track_clicked)
-            channel_widget.display_msd_channel.connect(self.__msd_channel)
+
+            channel_widget.display_msd_channel.connect(self.display_channel_msd)
+            channel_widget.display_ied_channel.connect(self.display_channel_ied)
+
             self.tab_widget.addTab(channel_widget, channel.name)
             self.parent.print(f'> done adding channel {PurePath(file).name}\n')
 
@@ -70,12 +75,9 @@ class AnalyzerWrapper(QMainWindow):
     def __msd_all_tracks(self, tracks, title):
         self.display_msd_tracks.emit(tracks, title)
 
-    def __msd_channel(self, channel):
-        self.display_channel_msd.emit(channel)
-
     def compare_tracks(self, radius):
         thread_pair = CompareThread(self.channels, radius)
-        thread_pair.result_ready.connect(self.create_co_traffic_widgets)
+        thread_pair.result_ready.connect(self.process_pairs)
         thread_pair.output.connect(self.parent.print)
         thread_pair.status.connect(self.parent.status_bar.showMessage)
         thread_pair.finished.connect(self.parent.status_bar.currentMessage)
@@ -94,11 +96,43 @@ class AnalyzerWrapper(QMainWindow):
         # thread_all.start()
         # self.threads.append(thread_all)
 
+    def process_pairs(self, pairs, radius):
+        if len(pairs) > 1:
+            group_thread = CompareFinalGroupThread(pairs, self.channels, radius)
+            group_thread.result_ready.connect(self.show_group)
+            group_thread.output.connect(self.parent.print)
+            group_thread.status.connect(self.parent.status_bar.showMessage)
+            group_thread.finished.connect(self.parent.status_bar.currentMessage)
+            group_thread.finished.connect(group_thread.deleteLater)
+
+            group_thread.start()
+            self.threads.append(group_thread)
+
+        for tpair in pairs:
+            channel_a = tpair['c_a']
+            channel_b = tpair['c_b']
+            pair = tpair['pairs']
+
+            title = f'Radius - {radius} [{channel_a.name} & {channel_b.name}]'
+            # pair.to_csv(f'./{title}')
+            cotraffic_widget = CoTrafficWidget(pair, title)
+            cotraffic_widget.pair_clicked.connect(self.__display_pair)
+            cotraffic_widget.msd_clicked.connect(self.__msd_all_tracks)
+            self.tab_widget.insertTab(0, cotraffic_widget, cotraffic_widget.title)
+
+        self.tab_widget.setCurrentIndex(0)
+        self.tool_bar.enable_analyze_btn()
+
+    def show_group(self, group, radius):
+        group_cotraffic_widget_title = f'Group'
+        group_cotraffic_widget = CoTrafficWidget(group, group_cotraffic_widget_title)
+        self.tab_widget.insertTab(0, group_cotraffic_widget, group_cotraffic_widget.title)
+
     def create_co_traffic_widgets(self, results, radius):
         for result in results:
             channel_a = result['c_a']
             channel_b = result['c_b']
-            pair = result['pair']
+            pair = result['pairs']
 
             title = f'Radius - {radius} [{channel_a.name} & {channel_b.name}]'
             # pair.to_csv(f'./{title}')
@@ -143,42 +177,54 @@ class CompareThread(QThread):
                         rendered_df.append(pair)
 
             if len(rendered_df) > 0:
-                results.append({'pair': rendered_df.copy(), 'c_a': channel_a, 'c_b': channel_b})
+                results.append({'pairs': rendered_df.copy(), 'c_a': channel_a, 'c_b': channel_b})
         self.output.emit(f'> done processing (pair thread) for radius : {self.radius} in {time.time() - start_time}\n')
         self.result_ready.emit(results, self.radius)
 
 
-class CompareAllThread(QThread):
-    result_ready = QtCore.pyqtSignal(pd.DataFrame, pd.DataFrame, float)
+class CompareFinalGroupThread(QThread):
+    result_ready = QtCore.pyqtSignal(list, float)
     status = QtCore.pyqtSignal(str)
     output = QtCore.pyqtSignal(str)
 
-    def __init__(self, channels, radius, parent=None):
+    def __init__(self, pairs, channels, radius, parent=None):
         QThread.__init__(self, parent)
-        self.channels = channels
+        self.pairs = pairs
         self.radius = radius
+        self.channels = channels
 
     def run(self):
-
         start_time = time.time()
-        self.output.emit(f'> started processing (all thread) for {self.radius}\n')
-        tracks_tuple = []
-        suffixes = []
-        results_pairs = {}
-        results_all = pd.DataFrame()
+        self.output.emit(f'> started processing group for {self.radius}\n')
+        # we have more then 2 channels
+        # take pair 1 from the list
+        pair_a = self.pairs[0]
+        # extract the channel suffix
+        c_a = pair_a['c_a']
+        c_b = pair_a['c_b']
+        first_pairs = pair_a['pairs']
+
+        available_channels = [c_a.name, c_b.name]
+        other_channels = []
         for channel in self.channels:
-            tracks_tuple.append(channel.tracks)
-            suffixes.append(channel.suffix)
-        for tracks in itertools.product(*tracks_tuple):
-            pairs, pair_union = compare_all_tracks(tracks, suffixes, self.radius)
-            for pair_id, pair in pairs.items():
-                if results_pairs.get(pair_id, None) is None:
-                    results_pairs[pair_id] = pd.DataFrame()
-                results_pairs[pair_id].append(pair)
-            results_all.append(pair_union)
-            self.status.emit('> comparing track ' + ','.join([t.__str__() for t in tracks]))
-        self.output.emit(f'> done processing (all thread) for radius : {self.radius} in {time.time() - start_time}\n')
-        self.result_ready.emit(results_pairs, results_all, self.radius)
+            if channel.name not in available_channels:
+                other_channels.append(channel)
+
+        print(f'Available channels {c_a.name}, {c_b.name}')
+        print(f'other channels len : {len(other_channels)}, name[0] {other_channels[0].name}, total tracks in [0] {len(other_channels[0].tracks)}')
+        c_a_filtered_tracks = []
+        for p in first_pairs:
+            c_a_filtered_tracks.append(p.tracks[c_a.suffix])
+
+        groups = []
+        for m_track in c_a_filtered_tracks:
+            for track in other_channels[0].tracks:
+                result = compare_tracks(m_track, track, m_track.suffix, track.suffix, self.radius)
+                if result:
+                    groups.append(result)
+                self.status.emit(f'> comparing group tracks m: {m_track.track_id}- O:{track.track_id}')
+        self.output.emit(f'> done processing group for radius : {self.radius} in {time.time() - start_time}\n')
+        self.result_ready.emit(groups, self.radius)
 
 
 class AnalysisToolWidget(QToolBar):
