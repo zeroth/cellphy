@@ -63,7 +63,8 @@ class AnalyzerWrapper(QMainWindow):
     def __render_all_channels(self):
         self.render_all_channels.emit(self.channels)
 
-    def __display_pair(self, tracks):
+    def __display_pair(self, pair):
+        tracks = [pair.track_a, pair.track_b]
         self.render_pair.emit(tracks)
 
     def __msd_all_tracks(self, tracks, title):
@@ -74,7 +75,7 @@ class AnalyzerWrapper(QMainWindow):
 
     def compare_tracks(self, radius):
         thread_pair = CompareThread(self.channels, radius)
-        thread_pair.result_ready.connect(self.create_common_co_traffic_widget)
+        thread_pair.result_ready.connect(self.create_co_traffic_widgets)
         thread_pair.output.connect(self.parent.print)
         thread_pair.status.connect(self.parent.status_bar.showMessage)
         thread_pair.finished.connect(self.parent.status_bar.currentMessage)
@@ -98,8 +99,9 @@ class AnalyzerWrapper(QMainWindow):
             channel_a = result['c_a']
             channel_b = result['c_b']
             pair = result['pair']
+
             title = f'Radius - {radius} [{channel_a.name} & {channel_b.name}]'
-            pair.to_csv(f'./{title}')
+            # pair.to_csv(f'./{title}')
             cotraffic_widget = CoTrafficWidget(pair, channel_a, channel_b, title)
             cotraffic_widget.pair_clicked.connect(self.__display_pair)
             cotraffic_widget.msd_clicked.connect(self.__msd_all_tracks)
@@ -117,7 +119,6 @@ class AnalyzerWrapper(QMainWindow):
 
 
 class CompareThread(QThread):
-    print('creating compare thread')
     result_ready = QtCore.pyqtSignal(list, float)
     status = QtCore.pyqtSignal(str)
     output = QtCore.pyqtSignal(str)
@@ -132,14 +133,16 @@ class CompareThread(QThread):
         start_time = time.time()
         self.output.emit(f'> started processing for Compare thread {self.radius}\n')
         for channel_a, channel_b in itertools.combinations(self.channels, 2):
-            rendered_df = pd.DataFrame()
+            rendered_df = []
             self.output.emit(f'  > processing channels {channel_a.name} & {channel_b.name}\n')
             for track_a in channel_a.tracks:
                 for track_b in channel_b.tracks:
                     self.status.emit(f'> comparing track {track_a.track_id} - {track_b.track_id}')
-                    rendered_df = rendered_df.append(compare_tracks(track_a, track_b, channel_a.suffix,
-                                                                    channel_b.suffix, self.radius))
-            if not rendered_df.empty:
+                    pair = compare_tracks(track_a, track_b, channel_a.suffix, channel_b.suffix, self.radius)
+                    if pair is not None:
+                        rendered_df.append(pair)
+
+            if len(rendered_df) > 0:
                 results.append({'pair': rendered_df.copy(), 'c_a': channel_a, 'c_b': channel_b})
         self.output.emit(f'> done processing (pair thread) for radius : {self.radius} in {time.time() - start_time}\n')
         self.result_ready.emit(results, self.radius)

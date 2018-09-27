@@ -1,4 +1,4 @@
-from cellphy.Analysis.Track import Track
+from cellphy.Analysis import Track
 import pandas as pd
 from pathlib import PurePath
 from functools import reduce
@@ -8,27 +8,10 @@ import statistics
 from cellphy.Analysis.functions import distance
 
 
-class NoSupportException(Exception):
-    pass
-
-
-try:
-    import PyQt5.QtCore as QtCore
-    HAS_QT = True
-    PARENT = QtCore.QObject
-except NoSupportException:
-    HAS_QT = False
-    PARENT = object
-
-
-class Channel(PARENT):
-    if HAS_QT:
-        channel_color_changed = QtCore.pyqtSignal()
+class Channel:
 
     def __init__(self, file_path=None, channel_name='Untitled', header=1,
                  data=None, color=[255, 255, 255], suffix='_C0'):
-        if HAS_QT:
-            QtCore.QObject.__init__(self)
 
         self.name = channel_name
         self.data_file = file_path

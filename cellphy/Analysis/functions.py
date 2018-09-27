@@ -5,6 +5,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from functools import reduce
 import itertools
+from .TrackPair import TrackPair
+from .Track import Track
+
 
 def distance(a, b):
     return np.sqrt(np.sum((np.array(a) - np.array(b)) ** 2))
@@ -99,7 +102,7 @@ def data_frame_splitter(df, column_name):
 
 def compare_tracks(track_a, track_b, suffix_a, suffix_b, _radius):
 
-    result = pd.DataFrame()
+    result = None
 
     # pandas apply function
     def apply_sphere(radius, sfl, sfr):
@@ -140,7 +143,7 @@ def compare_tracks(track_a, track_b, suffix_a, suffix_b, _radius):
 
             same_time_points = same_time_points[same_time_points['near'] == True]
 
-            if same_time_points.index.size:
+            if same_time_points.index.size > 1:
                 # print(same_time_points)
                 sfl = suffix_a
                 sfr = suffix_b
@@ -154,8 +157,17 @@ def compare_tracks(track_a, track_b, suffix_a, suffix_b, _radius):
                 same_time_points['suffix'] = f'{sfl},{sfr}'
                 same_time_points[sfl] = left_track_id
                 same_time_points[sfr] = right_track_id
+                track_a_rd = track_a.get_values().copy()
+                track_b_rd = track_b.get_values().copy()
 
-                result = result.append(same_time_points)
+                _time = list(same_time_points['time'])
+                _track_a = Track(track_a.track_id, track_a.name, track_a.color, track_a.suffix,
+                                     raw_data=track_a_rd[track_a_rd['time'].isin(_time)])
+                _track_b = Track(track_b.track_id, track_b.name, track_b.color, track_b.suffix,
+                                     raw_data=track_b_rd[track_b_rd['time'].isin(_time)])
+
+                result = TrackPair(_track_a, _track_b, _time)
+                # result = result.append(same_time_points)
 
                 # further splitting of track if we want to see which time points are not together
                 # splited_same_points = split_df(same_time_points)

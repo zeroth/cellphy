@@ -1,10 +1,10 @@
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QMainWindow, QAction
 import PyQt5.QtCore as QtCore
-from cellphy.Analysis.Track import Track
+from cellphy.Analysis import Track, TrackPair
 
 
 class CoTrafficWidget(QMainWindow):
-    pair_clicked = QtCore.pyqtSignal(list)
+    pair_clicked = QtCore.pyqtSignal(TrackPair)
     msd_clicked = QtCore.pyqtSignal(list, str)
 
     def __init__(self, data, channel_a, channel_b, title = 'Untitled', parent=None):
@@ -15,25 +15,13 @@ class CoTrafficWidget(QMainWindow):
         self.pairs = dict()
         self.title = title
         # we want to just show top pairs
-        self.top_pairs = self.data.groupby('top_pair')
-        for name, group in self.top_pairs:
+        # self.top_pairs = self.data.groupby('top_pair')
+        for pair in self.data:
             list_item = QListWidgetItem()
-            list_item.setText(f'{name} - ({group.index.size})')
-            list_item.setData(QtCore.Qt.UserRole+1, name)
-            tracks = []
-            for channel in self.channels:
-                track_df = group[[f'X{channel.suffix}', f'Y{channel.suffix}', f'Z{channel.suffix}',
-                                 f'trackid{channel.suffix}', f'time']]
-                track_df = track_df.rename(columns={f'X{channel.suffix}': f'X{channel.suffix}',
-                                                    f'Y{channel.suffix}': f'Y{channel.suffix}',
-                                                    f'Z{channel.suffix}': f'Z{channel.suffix}',
-                                                    f'trackid{channel.suffix}': f'trackid{channel.suffix}'})
-                track_id = list(track_df[f'trackid{channel.suffix}'])[0]
-                tracks.append(Track(track_id=track_id, name=channel.name, color=channel.base_color, raw_data=track_df,
-                                    suffix=channel.suffix))
-            self.pairs[name] = tracks
-
+            list_item.setText(f'{pair.name} - ({len(pair.time)})')
+            list_item.setData(QtCore.Qt.UserRole + 1, pair.name)
             self.list_widget.addItem(list_item)
+            self.pairs[pair.name] = pair
 
         self.list_widget.itemClicked.connect(self.__track_clicked)
 
@@ -50,7 +38,11 @@ class CoTrafficWidget(QMainWindow):
 
     def __plot_msd(self):
         flatten = lambda l: [item for sublist in l for item in sublist]
-        tracks = list(self.pairs.values())
-        tracks = flatten(tracks)
+        tracks = []
+        for _, pair in self.pairs.items():
+            tracks.append(pair.track_a)
+            tracks.append(pair.track_b)
+
+        # tracks = flatten(tracks)
         # print(tracks)
         self.msd_clicked.emit(tracks, self.title)

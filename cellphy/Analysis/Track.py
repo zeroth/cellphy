@@ -1,7 +1,9 @@
 from collections import OrderedDict
 import numpy as np
-from cellphy.Analysis.functions import distance
 
+
+def distance(a, b):
+    return np.sqrt(np.sum((np.array(a) - np.array(b)) ** 2))
 
 class Track:
     def __init__(self, track_id, name, color, suffix, raw_data=None, parent=None):
