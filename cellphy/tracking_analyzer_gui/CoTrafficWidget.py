@@ -37,12 +37,9 @@ class CoTrafficWidget(QMainWindow):
         self.pair_clicked.emit(self.pairs[pair_id])
 
     def __plot_msd(self):
-        flatten = lambda l: [item for sublist in l for item in sublist]
         tracks = []
         for _, pair in self.pairs.items():
             tracks.append(pair.track_a)
             tracks.append(pair.track_b)
 
-        # tracks = flatten(tracks)
-        # print(tracks)
         self.msd_clicked.emit(tracks, self.title)
