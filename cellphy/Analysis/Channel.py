@@ -52,7 +52,6 @@ class Channel:
     def get_time_point_position_map(self):
         # filter tracks
         _tracks = [tr for tr in self.tracks if len(tr.time_position_map) > 1]
-        print("get_time_point_position_map track count ", len(_tracks))
         time_point_position_map = {}
         for i in range(self.max_time_point+1):
             for t in _tracks:
@@ -65,7 +64,6 @@ class Channel:
 
     def get_distance_between_pos_by_time(self):
         time_pos_map = self.get_time_point_position_map()
-        print('get_distance_between_pos_by_time count ', len(time_pos_map))
         time_pos_distance_map = {}
         for time, pos in time_pos_map.items():
             for p1, p2 in itertools.combinations(pos, 2):
@@ -76,7 +74,6 @@ class Channel:
 
     def get_time_point_mean_and_stdev(self):
         time_point_distance = self.get_distance_between_pos_by_time()
-        print('get_time_point_mean_and_stdev count ', len(time_point_distance))
         time_pos_distance_mean_map = {}
         for time, pos in time_point_distance.items():
             if len(pos) > 1:

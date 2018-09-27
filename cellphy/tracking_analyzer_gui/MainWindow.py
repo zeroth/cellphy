@@ -76,7 +76,7 @@ class MainWindow(QMainWindow):
         analyzer_widget.track_clicked.connect(self.display_track)
         analyzer_widget.render_all_channels.connect(self.display_all_channels)
         analyzer_widget.render_pair.connect(self.display_pair)
-        # analyzer_widget.display_msd_tracks.connect(self.display_msd_tracks)
+        analyzer_widget.display_msd_tracks.connect(self.display_msd_tracks)
         analyzer_widget.display_channel_msd.connect(self.display_channel)
         self.analyzer_container.addTab(analyzer_widget, analyzer_widget.title)
         self.print('> done loading channels\n')

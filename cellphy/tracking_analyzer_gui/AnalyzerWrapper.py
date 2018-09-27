@@ -126,6 +126,8 @@ class AnalyzerWrapper(QMainWindow):
     def show_group(self, group, radius):
         group_cotraffic_widget_title = f'Group'
         group_cotraffic_widget = CoTrafficWidget(group, group_cotraffic_widget_title)
+        group_cotraffic_widget.pair_clicked.connect(self.__display_pair)
+        group_cotraffic_widget.msd_clicked.connect(self.__msd_all_tracks)
         self.tab_widget.insertTab(0, group_cotraffic_widget, group_cotraffic_widget.title)
 
     def create_co_traffic_widgets(self, results, radius):
@@ -210,8 +212,6 @@ class CompareFinalGroupThread(QThread):
             if channel.name not in available_channels:
                 other_channels.append(channel)
 
-        print(f'Available channels {c_a.name}, {c_b.name}')
-        print(f'other channels len : {len(other_channels)}, name[0] {other_channels[0].name}, total tracks in [0] {len(other_channels[0].tracks)}')
         c_a_filtered_tracks = []
         for p in first_pairs:
             c_a_filtered_tracks.append(p.tracks[c_a.suffix])
