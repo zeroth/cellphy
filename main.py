@@ -1,11 +1,18 @@
 import argparse
 import os
+import sys
 from cellphy.lib import libinstall
 from cellphy.Bleaching import bleach_dir
-from cellphy.preprocessing import deskew_dir
-# from cellphy.preprocessing import decon_dir
 from cellphy.Analysis.Tools import calculate_msd, calculate_msb_by_bin, track_analyze, analyze_mean_stddev
 from cellphy.tracking_analyzer_gui import start_ui
+
+is_linux = False
+if sys.platform.startswith('linux'):
+    is_linux = True
+
+if is_linux:
+    from cellphy.preprocessing import deskew_dir
+    from cellphy.preprocessing import decon_dir
 
 
 def process_args():
@@ -15,20 +22,11 @@ def process_args():
 
     a_arguments = commands.add_parser('analysis')
     b_arguments = commands.add_parser('bleach')
-    d_arguments = commands.add_parser('deskew')
-    i_arguments = commands.add_parser('install')
-    # dc_arguments = commands.add_parser('decon')
+
     m_arguments = commands.add_parser('msd')
     bm_arguments = commands.add_parser('binmsd')
     t_arguments = commands.add_parser('track')
     ui_arguments = commands.add_parser('gui')
-
-    # deskew
-    d_arguments.add_argument('path', default='.')
-    d_arguments.add_argument('--angle', default=31.5, type=float)
-    d_arguments.add_argument('--dz', default=0.4, type=float)
-    d_arguments.add_argument('--pixelsize', default=0.104, type=float)
-    d_arguments.set_defaults(func=deskew_dir)
 
     # bleach
     b_arguments.add_argument('path', default='.')
@@ -37,15 +35,6 @@ def process_args():
     # Analysis
     a_arguments.add_argument('path', default='.')
     a_arguments.set_defaults(func=analyze_mean_stddev)
-
-    # install
-    i_arguments.add_argument('path', default='.')
-    i_arguments.set_defaults(func=install)
-
-    # decon
-    # dc_arguments.add_argument('path', default='.')
-    # dc_arguments.add_argument('--channel', type=int, required=True)
-    # dc_arguments.set_defaults(func=decon_dir)
 
     # msd
     m_arguments.add_argument('path', default='.')
@@ -63,6 +52,29 @@ def process_args():
 
     # start gui
     ui_arguments.set_defaults(func=start_ui)
+
+    if is_linux:
+        # specific to linux
+        d_arguments = commands.add_parser('deskew')
+        i_arguments = commands.add_parser('install')
+        dc_arguments = commands.add_parser('decon')
+
+        # install
+        i_arguments.add_argument('path', default='.')
+        i_arguments.set_defaults(func=install)
+
+        # decon
+        dc_arguments.add_argument('path', default='.')
+        dc_arguments.add_argument('--channel', type=int, required=True)
+        dc_arguments.set_defaults(func=decon_dir)
+
+        # deskew
+        d_arguments.add_argument('path', default='.')
+        d_arguments.add_argument('--angle', default=31.5, type=float)
+        d_arguments.add_argument('--dz', default=0.4, type=float)
+        d_arguments.add_argument('--pixelsize', default=0.104, type=float)
+        d_arguments.set_defaults(func=deskew_dir)
+
 
     args = arguments.parse_args()
 
