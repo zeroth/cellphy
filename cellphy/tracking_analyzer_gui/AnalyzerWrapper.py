@@ -48,7 +48,7 @@ class AnalyzerWrapper(QMainWindow):
             channel_widget.display_msd_channel.connect(self.display_channel_msd)
             channel_widget.display_ied_channel.connect(self.display_channel_ied)
 
-            self.tab_widget.addTab(channel_widget, channel.name)
+            self.tab_widget.addTab(channel_widget, f'{channel.name}-{channel.suffix}')
             self.parent.print(f'> done adding channel {PurePath(file).name}\n')
 
         if len(self.channels) > 1:
@@ -101,7 +101,7 @@ class AnalyzerWrapper(QMainWindow):
             channel_b = tpair['c_b']
             pair = tpair['pairs']
 
-            title = f'Radius - {radius} [{channel_a.name} & {channel_b.name}]'
+            title = f'Radius - {radius} [{channel_a.suffix} & {channel_b.suffix}]'
             # pair.to_csv(f'./{title}')
             cotraffic_widget = CoTrafficWidget(pair, title)
             cotraffic_widget.pair_clicked.connect(self.__display_pair)
