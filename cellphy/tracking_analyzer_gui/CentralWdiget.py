@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QGridLayout, QScrollArea, QMdiArea
+from PyQt5.QtWidgets import QScrollArea, QMdiArea
 import PyQt5.QtCore as QtCore
 
 

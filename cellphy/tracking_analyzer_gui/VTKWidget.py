@@ -2,8 +2,6 @@ import vtk
 from vtk import qt
 qt.QVTKRWIBase = "QGLWidget"
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from cellphy.Analysis.functions import distance
-import math
 
 
 class VTKWidget(QVTKRenderWindowInteractor):

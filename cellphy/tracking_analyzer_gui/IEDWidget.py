@@ -1,5 +1,4 @@
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QWidget, QVBoxLayout, QFileDialog,\
-    QSpinBox, QDoubleSpinBox, QHBoxLayout, QGroupBox, QPushButton, QToolBar, QAction, QMainWindow, QFrame
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QFileDialog,QAction, QMainWindow
 import PyQt5.QtCore as QtCore
 from cellphy.Analysis.Track import Track
 from cellphy.Analysis.Channel import Channel
@@ -27,7 +26,6 @@ class IEDWidget(QMainWindow):
     def prepare_table(self):
         ied = self.channel.get_time_point_mean_and_stdev()
         packets = list(ied.values())
-        print('number of things in IED', len(packets))
         self.table_widget.setRowCount(len(packets))
         self.table_widget.setColumnCount(3)
         self.table_widget.setHorizontalHeaderLabels(self.headers)

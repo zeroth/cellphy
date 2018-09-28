@@ -2,13 +2,10 @@ import PyQt5.QtCore as QtCore
 
 from PyQt5.QtWidgets import QMainWindow, QTabWidget, QAction, \
     QFileDialog, QStatusBar, QDockWidget, QTextEdit, QMessageBox, QSplitter
-from PyQt5.QtGui import QTextDocumentWriter, QTextDocument
-
 
 from .CentralWdiget import CentralWidget
 from .AnalyzerWrapper import AnalyzerWrapper
 from .VTKWidget import VTKWidget
-from .JumpChartWidget import JumpChartWidget
 from .MsdChartWidget import MsdChartWidget, MSDWidget
 from .IEDWidget import IEDWidget
 
@@ -88,6 +85,7 @@ class MainWindow(QMainWindow):
             return
 
         chart = MSDWidget(track, track.name)
+        chart.setWindowTitle(track.name)
         self.central_widget.add_widget(chart)
 
     def display_all_channels(self, channels):
@@ -163,6 +161,7 @@ class MainWindow(QMainWindow):
 
         splitter.addWidget(vtk_widget)
         splitter.addWidget(chart)
+        splitter.setWindowTitle(title)
         self.central_widget.add_widget(splitter)
 
     def display_channel(self, channel):
@@ -193,6 +192,7 @@ class MainWindow(QMainWindow):
         splitter.addWidget(vtk_widget)
         splitter.addWidget(chart)
         splitter.addWidget(ied_widget)
+        splitter.setWindowTitle(title)
         self.central_widget.add_widget(splitter)
 
     def find_mdi_child(self, title):

@@ -1,5 +1,4 @@
-from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QWidget, QVBoxLayout, \
-    QSpinBox, QDoubleSpinBox, QHBoxLayout, QGroupBox, QPushButton, QToolBar, QAction, QMainWindow, QFrame
+from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QPushButton, QToolBar, QMainWindow
 import PyQt5.QtCore as QtCore
 from cellphy.Analysis.Track import Track
 from cellphy.Analysis.Channel import Channel
@@ -18,7 +17,6 @@ class ChannelWidget(QMainWindow):
         self.tool_bar = ToolBarWidget(self)
 
         self.tool_bar.msd_button_clicked.connect(self.__msd_channel)
-        self.tool_bar.ied_button_clicked.connect(self.__ied_channel)
         for _id in self.channel.track_ids:
             list_item = QListWidgetItem()
             _track = self.channel.get_track(float(_id))
@@ -45,50 +43,12 @@ class ChannelWidget(QMainWindow):
 
 
 class ToolBarWidget(QToolBar):
-    spin_change = QtCore.pyqtSignal(float)
     msd_button_clicked = QtCore.pyqtSignal()
-    ied_button_clicked = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         QToolBar.__init__(self, parent)
-
-        # self._frame = QFrame()
-        # self._frame.setFrameShape(QFrame.StyledPanel)
-        # self._frame.setFrameShadow(QFrame.Plain)
-        # self._layout = QHBoxLayout(self._frame)
-
-        # self.spin_box = QSpinBox()
-        # self.spin_box.setMinimum(0)
-        # self.spin_box.setSingleStep(1)
-
-        # self.spin_btn = QPushButton('Bin, MSD and Fit')
-        # self.spin_btn.clicked.connect(self.spin_btn_clicked)
-
-        # self._layout.addWidget(self.spin_box)
-        # self._layout.addWidget(self.spin_btn)
-        # self.addSeparator()
-        # self._frame.setLayout(self._layout)
-
         self.msd_btn = QPushButton('Display')
         self.msd_btn.clicked.connect(self.msd_button_clicked)
-
-        # self.ied_btn = QPushButton('IED')
-        # self.ied_btn.clicked.connect(self.ied_button_clicked)
-
         self.addWidget(self.msd_btn)
 
-    def set_spin(self, value):
-        self.spin_box.setValue(value)
-
-    def spin_value(self):
-        return self.spin_box.value()
-
-    def spin_btn_clicked(self):
-        self.spin_btn.setEnabled(False)
-        self.spin_box.setEnabled(False)
-        self.spin_change.emit(self.spin_box.value())
-
-    def enable_spin_btn(self):
-        self.spin_box.setEnabled(True)
-        self.spin_btn.setEnabled(True)
 

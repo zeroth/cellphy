@@ -1,7 +1,7 @@
 import PyQt5.QtCore as QtCore
 import PyQt5.QtGui as QtGui
 from PyQt5.QtSvg import QSvgGenerator
-# from PyQt5.QtCore import QMargine
+
 from PyQt5.QtWidgets import QMainWindow, QAction, QFileDialog, QSizePolicy, QSplitter
 from PyQt5.QtGui import QPen, QColor, QBrush
 from PyQt5.QtCore import QSize
@@ -10,18 +10,6 @@ import numpy as np
 from cellphy.Analysis import Track, Channel
 from .VTKWidget import VTKWidget
 from scipy.optimize import curve_fit
-
-# class ToolBar(QWidget):
-#     def __init__(self, parent=None):
-#         QWidget.__init__(self, parent)
-#
-#         self._layout = QHBoxLayout(self)
-#         spacer = QSpacerItem(2000, 10)
-#         self._layout.addItem(spacer)
-#
-#     def add_button(self, button):
-#         self._layout.addWidget(button)
-
 
 def fit_function(_x, d, t):
     return d * np.power(_x, t)

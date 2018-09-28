@@ -1,17 +1,15 @@
-from PyQt5.QtWidgets import QTabWidget, QWidget, QHBoxLayout, QVBoxLayout, QDoubleSpinBox, QPushButton, QFrame, \
-    QMainWindow, QAction, QToolBar
+from PyQt5.QtWidgets import QTabWidget, QHBoxLayout, QDoubleSpinBox, QPushButton, QFrame, \
+    QMainWindow,  QToolBar
 from PyQt5.QtCore import QThread
 from cellphy.Analysis.Channel import Channel
 from cellphy.Analysis.Track import Track
-from cellphy.Analysis.TrackGroups import TrackGroup
 import PyQt5.QtCore as QtCore
 from pathlib import PurePath
 from .ChannelWidget import ChannelWidget
 from .CoTrafficWidget import CoTrafficWidget
-import pandas as pd
 import time
 import itertools
-from cellphy.Analysis.functions import compare_tracks, compare_all_tracks
+from cellphy.Analysis.functions import compare_tracks
 
 
 class AnalyzerWrapper(QMainWindow):
@@ -86,16 +84,6 @@ class AnalyzerWrapper(QMainWindow):
         thread_pair.start()
         self.threads.append(thread_pair)
 
-        # thread_all = CompareAllThread(self.channels, radius)
-        # thread_all.result_ready.connect(self.create_common_co_traffic_widget)
-        # thread_all.output.connect(self.parent.print)
-        # thread_all.status.connect(self.parent.status_bar.showMessage)
-        # thread_all.finished.connect(self.parent.status_bar.currentMessage)
-        # thread_all.finished.connect(thread_all.deleteLater)
-        #
-        # thread_all.start()
-        # self.threads.append(thread_all)
-
     def process_pairs(self, pairs, radius):
         if len(pairs) > 1:
             group_thread = CompareFinalGroupThread(pairs, self.channels, radius)
@@ -124,7 +112,7 @@ class AnalyzerWrapper(QMainWindow):
         self.tool_bar.enable_analyze_btn()
 
     def show_group(self, group, radius):
-        group_cotraffic_widget_title = f'Group'
+        group_cotraffic_widget_title = f'Group {radius}'
         group_cotraffic_widget = CoTrafficWidget(group, group_cotraffic_widget_title)
         group_cotraffic_widget.pair_clicked.connect(self.__display_pair)
         group_cotraffic_widget.msd_clicked.connect(self.__msd_all_tracks)
