@@ -3,7 +3,7 @@ import os
 from cellphy.lib import libinstall
 from cellphy.Bleaching import bleach_dir
 from cellphy.preprocessing import deskew_dir
-from cellphy.preprocessing import decon_dir
+# from cellphy.preprocessing import decon_dir
 from cellphy.Analysis.Tools import calculate_msd, calculate_msb_by_bin, track_analyze, analyze_mean_stddev
 from cellphy.tracking_analyzer_gui import start_ui
 
@@ -17,7 +17,7 @@ def process_args():
     b_arguments = commands.add_parser('bleach')
     d_arguments = commands.add_parser('deskew')
     i_arguments = commands.add_parser('install')
-    dc_arguments = commands.add_parser('decon')
+    # dc_arguments = commands.add_parser('decon')
     m_arguments = commands.add_parser('msd')
     bm_arguments = commands.add_parser('binmsd')
     t_arguments = commands.add_parser('track')
@@ -43,9 +43,9 @@ def process_args():
     i_arguments.set_defaults(func=install)
 
     # decon
-    dc_arguments.add_argument('path', default='.')
-    dc_arguments.add_argument('--channel', type=int, required=True)
-    dc_arguments.set_defaults(func=decon_dir)
+    # dc_arguments.add_argument('path', default='.')
+    # dc_arguments.add_argument('--channel', type=int, required=True)
+    # dc_arguments.set_defaults(func=decon_dir)
 
     # msd
     m_arguments.add_argument('path', default='.')
