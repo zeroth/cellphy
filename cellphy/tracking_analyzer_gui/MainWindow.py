@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QMainWindow, QTabWidget, QAction, \
 from .CentralWdiget import CentralWidget
 from .AnalyzerWrapper import AnalyzerWrapper
 from .VTKWidget import VTKWidget
-from .MsdChartWidget import MsdChartWidget, MSDWidget
+from .MsdChartWidget import MSDWidget
 from .IEDWidget import IEDWidget
 
 
@@ -75,6 +75,7 @@ class MainWindow(QMainWindow):
         analyzer_widget.render_pair.connect(self.display_pair)
         analyzer_widget.display_msd_tracks.connect(self.display_msd_tracks)
         analyzer_widget.display_channel_msd.connect(self.display_channel)
+        analyzer_widget.display_channel_co_traffic.connect(self.display_channel)
         self.analyzer_container.addTab(analyzer_widget, analyzer_widget.title)
         self.print('> done loading channels\n')
 
@@ -129,7 +130,7 @@ class MainWindow(QMainWindow):
             # self.print(track_pos)
         vtk_widget.render_lines()
 
-        chart = MsdChartWidget(tracks)
+        chart = MSDWidget(tracks, title)
         chart.msd_line_clicked.connect(self.display_track)
         # chart.bar_clicked.connect(vtk_widget.display_points)
 
@@ -139,33 +140,20 @@ class MainWindow(QMainWindow):
         self.central_widget.add_widget(splitter)
 
     def display_msd_tracks(self, tracks, title):
-        vtk_widget = VTKWidget(self)
+        # vtk_widget = VTKWidget(self)
 
         window = self.find_mdi_child(title)
         if window:
             self.central_widget.setActiveSubWindow(window)
             return
 
-        for track in tracks:
-            vtk_widget.add_track(track)
-            # self.print(track_pos)
-        vtk_widget.render_lines()
-
-        vtk_widget.setWindowTitle(title)
-
-        splitter = QSplitter(self)
-
-        chart = MsdChartWidget(tracks, title)
-        # chart.setWindowTitle(title)
+        chart = MSDWidget(tracks, title)
         chart.msd_line_clicked.connect(self.display_track)
 
-        splitter.addWidget(vtk_widget)
-        splitter.addWidget(chart)
-        splitter.setWindowTitle(title)
-        self.central_widget.add_widget(splitter)
+        chart.setWindowTitle(title)
+        self.central_widget.add_widget(chart)
 
-    def display_channel(self, channel):
-        vtk_widget = VTKWidget(self)
+    def display_channel(self, channel, vtk_on=True, show_ied=True, show_alfa=False):
         title = channel.name
 
         window = self.find_mdi_child(title)
@@ -173,25 +161,18 @@ class MainWindow(QMainWindow):
             self.central_widget.setActiveSubWindow(window)
             return
 
-        for track in channel.tracks:
-            vtk_widget.add_track(track)
-            # self.print(track_pos)
-        vtk_widget.render_lines()
-
-        vtk_widget.setWindowTitle(title)
-
         splitter = QSplitter(self)
 
-        chart = MsdChartWidget(channel.tracks)
+        chart = MSDWidget(channel.tracks, title, vtk_on=vtk_on, show_alfa_table=show_alfa)
         chart.msd_line_clicked.connect(self.display_track)
-        chart.msd_line_clicked.connect(vtk_widget.highlight_track)
+        # chart.msd_line_clicked.connect(vtk_widget.highlight_track)
         chart.setWindowTitle(f'MSD {title}')
 
-        ied_widget = IEDWidget(channel)
-
-        splitter.addWidget(vtk_widget)
         splitter.addWidget(chart)
-        splitter.addWidget(ied_widget)
+
+        if show_ied:
+            ied_widget = IEDWidget(channel)
+            splitter.addWidget(ied_widget)
         splitter.setWindowTitle(title)
         self.central_widget.add_widget(splitter)
 

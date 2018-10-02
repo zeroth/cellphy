@@ -7,7 +7,7 @@ from cellphy.Analysis.Channel import Channel
 class ChannelWidget(QMainWindow):
     track_clicked = QtCore.pyqtSignal(Track)
     display_msd_channel = QtCore.pyqtSignal(Channel)
-    display_ied_channel = QtCore.pyqtSignal(Channel)
+    # display_ied_channel = QtCore.pyqtSignal(Channel)
 
     def __init__(self, channel, parent=None):
         QMainWindow.__init__(self, parent)
@@ -38,8 +38,8 @@ class ChannelWidget(QMainWindow):
     def __msd_channel(self):
         self.display_msd_channel.emit(self.channel)
 
-    def __ied_channel(self):
-        self.display_ied_channel.emit(self.channel)
+    # def __ied_channel(self):
+    #     self.display_ied_channel.emit(self.channel)
 
 
 class ToolBarWidget(QToolBar):

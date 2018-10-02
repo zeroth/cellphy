@@ -26,10 +26,11 @@ class IEDWidget(QMainWindow):
     def prepare_table(self):
         ied = self.channel.get_time_point_mean_and_stdev()
         packets = list(ied.values())
-        self.table_widget.setRowCount(len(packets))
+        #
         self.table_widget.setColumnCount(3)
         self.table_widget.setHorizontalHeaderLabels(self.headers)
         for row, packet in enumerate(packets):
+            self.table_widget.setRowCount(row+1)
             for col, val in enumerate(packet):
                 table_item = QTableWidgetItem(str(val))
                 self.table_widget.setItem(row, col, table_item)
