@@ -1,6 +1,6 @@
 import vtk
-from vtk import qt
-qt.QVTKRWIBase = "QGLWidget"
+# from vtk import qt
+# qt.QVTKRWIBase = "QGLWidget"
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 
