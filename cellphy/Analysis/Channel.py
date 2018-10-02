@@ -40,8 +40,6 @@ class Channel:
 
         self.track_ids = self.raw_data[f'trackid{self.suffix}'].unique()
 
-        self.max_time_point = self.raw_data['time'].max()
-
         for _id in self.track_ids:
             t = Track(track_id=_id, name=self.name, color=self.base_color, suffix=self.suffix,
                       raw_data=self.raw_data[self.raw_data[f'trackid{self.suffix}'] == _id], parent=self)
@@ -49,11 +47,25 @@ class Channel:
             self.tracks.append(t)
             self.tracks_hash_map[_id] = t
 
+        self.max_time_point = self._get_max_time_point()
+
+    def _get_max_time_point(self):
+        times = []
+        for t in self.tracks:
+            times.append(t.max_time_point)
+        return max(times)
+
+    def add_track(self, _track):
+        self.tracks.append(_track)
+
+    def set_track(self, _tracks):
+        self.tracks = _tracks
+
     def get_time_point_position_map(self):
         # filter tracks
         _tracks = [tr for tr in self.tracks if len(tr.time_position_map) > 1]
         time_point_position_map = {}
-        for i in range(self.max_time_point+1):
+        for i in range(self._get_max_time_point()+1):
             for t in _tracks:
                 pos = t.get_position_by_time_point(i)
                 if pos:
@@ -86,11 +98,11 @@ class Channel:
         tracks_bin = {}
         # it_track = copy.deepcopy(self.tracks)
         m_track = self.tracks
-        for sb in range(0, self.max_time_point, binsize):
+        for sb in range(0, self._get_max_time_point(), binsize):
             it_track = m_track
             # print(f'len(it_track){len(it_track)}')
             for t in it_track:
-                tk = np.array(list(t.time_point_position_map.keys()))
+                tk = np.array(list(t.time_position_map.keys()))
                 if np.any((sb >= tk) * (sb <= (sb+binsize))):
                     if not tracks_bin.get(sb, False):
                         tracks_bin[sb] = []
