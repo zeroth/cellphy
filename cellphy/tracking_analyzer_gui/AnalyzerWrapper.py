@@ -103,7 +103,7 @@ class AnalyzerWrapper(QMainWindow):
             channel_b = tpair['c_b']
             pair = tpair['pairs']
 
-            title = f'Radius - {radius} [{channel_a.suffix} & {channel_b.suffix}]'
+            title = f'Radius - {radius:.1f} [{channel_a.suffix} & {channel_b.suffix}]'
             # pair.to_csv(f'./{title}')
             cotraffic_widget = CoTrafficWidget(pair, radius, title)
             cotraffic_widget.pair_clicked.connect(self.__display_pair)
@@ -117,7 +117,7 @@ class AnalyzerWrapper(QMainWindow):
         self.tool_bar.enable_analyze_btn()
 
     def show_group(self, group, radius):
-        group_cotraffic_widget_title = f'Group {radius}'
+        group_cotraffic_widget_title = f'Group {radius:.1f}'
         group_cotraffic_widget = CoTrafficWidget(group, radius, group_cotraffic_widget_title)
         group_cotraffic_widget.pair_clicked.connect(self.__display_pair)
         group_cotraffic_widget.msd_clicked.connect(self.__msd_all_tracks)
@@ -131,7 +131,7 @@ class AnalyzerWrapper(QMainWindow):
             channel_b = result['c_b']
             pair = result['pairs']
 
-            title = f'Radius - {radius} [{channel_a.name} & {channel_b.name}]'
+            title = f'Radius - {radius:.1f} [{channel_a.name} & {channel_b.name}]'
             # pair.to_csv(f'./{title}')
             cotraffic_widget = CoTrafficWidget(pair, channel_a, channel_b, title)
             cotraffic_widget.pair_clicked.connect(self.__display_pair)

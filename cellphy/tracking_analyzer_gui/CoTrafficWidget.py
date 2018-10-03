@@ -102,7 +102,7 @@ class CoTrafficWidget(QMainWindow):
         bin_tracks = channel.bin_tracks(binsize=bin_value)
         total_dict = {}
         for sb, tb in bin_tracks.items():
-            _channel = Channel(channel_name=f'{sb-bin_value}-{sb}_{self.radius}_{channel.suffix}',
+            _channel = Channel(channel_name=f'{sb-bin_value}-{sb}_{self.radius:.1f}_{channel.suffix}',
                                suffix=channel.suffix, color=channel.base_color)
             _channel.set_track(tb)
             if not total_dict.get(f'{sb-bin_value}-{sb}', False):
@@ -118,7 +118,7 @@ class CoTrafficWidget(QMainWindow):
                     current['lt'] += 1
 
             self.show_channel.emit(_channel, False, False, True)
-        self.show_bin_total.emit(total_dict, f'{bin_value}-{self.radius}-{channel.suffix}')
+        self.show_bin_total.emit(total_dict, f'{bin_value}-{self.radius:.1f}-{channel.suffix}')
 
     def _get_tracks_for_meta(self):
         pair_pick = self.data[0]
@@ -140,10 +140,10 @@ class CoTrafficWidget(QMainWindow):
     def __extract_channels(self, extract_tracks = True):
         # get the channel suffix
         tracks = self._get_tracks_for_meta()
-        self.channel_a = Channel(channel_name=f'{self.radius}{tracks[0].suffix}',
+        self.channel_a = Channel(channel_name=f'{self.radius:.1f}{tracks[0].suffix}',
                                  suffix=tracks[0].suffix, color=tracks[0].color)
 
-        self.channel_b = Channel(channel_name=f'{self.radius}{tracks[1].suffix}',
+        self.channel_b = Channel(channel_name=f'{self.radius:.1f}{tracks[1].suffix}',
                                  suffix=tracks[1].suffix, color=tracks[1].color)
         if extract_tracks:
             for _, pair in self.pairs.items():
