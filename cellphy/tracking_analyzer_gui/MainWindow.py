@@ -61,6 +61,10 @@ class MainWindow(QMainWindow):
         tile_act.triggered.connect(self.central_widget.tileSubWindows)
         self.tool_bar.addAction(tile_act)
 
+        cls_act = QAction('&Close All Windows', self)
+        cls_act.triggered.connect(self.central_widget.closeAllSubWindows)
+        self.tool_bar.addAction(cls_act)
+
     def show_warning(self, text):
         msg_box = QMessageBox(self)
         msg_box.setText(text)
