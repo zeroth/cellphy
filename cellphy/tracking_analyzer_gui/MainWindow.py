@@ -8,16 +8,17 @@ from .AnalyzerWrapper import AnalyzerWrapper
 from .VTKWidget import VTKWidget
 from .MsdChartWidget import MSDWidget
 from .IEDWidget import IEDWidget
+from .AlfaTotalTable import AlfaTotalTable
 
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
         self.tool_bar = self.addToolBar('Main Toolbar')
-        self.update_toolbar()
         self.central_widget = CentralWidget(self)
         self.setCentralWidget(self.central_widget)
 
+        self.update_toolbar()
         # output window
         self.output_widget = QTextEdit()
         self.output_widget.setReadOnly(True)
@@ -55,6 +56,11 @@ class MainWindow(QMainWindow):
         open_files_act.triggered.connect(self.init_analyzer)
         self.tool_bar.addAction(open_files_act)
 
+        tile_act = QAction('&Tile Windows', self)
+        tile_act.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_T)
+        tile_act.triggered.connect(self.central_widget.tileSubWindows)
+        self.tool_bar.addAction(tile_act)
+
     def show_warning(self, text):
         msg_box = QMessageBox(self)
         msg_box.setText(text)
@@ -76,6 +82,7 @@ class MainWindow(QMainWindow):
         analyzer_widget.display_msd_tracks.connect(self.display_msd_tracks)
         analyzer_widget.display_channel_msd.connect(self.display_channel)
         analyzer_widget.display_channel_co_traffic.connect(self.display_channel)
+        analyzer_widget.display_bin_total.connect(self.display_alfa_table)
         self.analyzer_container.addTab(analyzer_widget, analyzer_widget.title)
         self.print('> done loading channels\n')
 
@@ -121,23 +128,12 @@ class MainWindow(QMainWindow):
             self.central_widget.setActiveSubWindow(window)
             return
 
-        splitter = QSplitter(self)
-
-        vtk_widget = VTKWidget(self)
-
-        for index, track in enumerate(tracks):
-            vtk_widget.add_track(track)
-            # self.print(track_pos)
-        vtk_widget.render_lines()
-
         chart = MSDWidget(tracks, title)
         chart.msd_line_clicked.connect(self.display_track)
         # chart.bar_clicked.connect(vtk_widget.display_points)
 
-        splitter.addWidget(vtk_widget)
-        splitter.addWidget(chart)
-        splitter.setWindowTitle(title)
-        self.central_widget.add_widget(splitter)
+        chart.setWindowTitle(title)
+        self.central_widget.add_widget(chart)
 
     def display_msd_tracks(self, tracks, title):
         # vtk_widget = VTKWidget(self)
@@ -175,6 +171,15 @@ class MainWindow(QMainWindow):
             splitter.addWidget(ied_widget)
         splitter.setWindowTitle(title)
         self.central_widget.add_widget(splitter)
+
+    def display_alfa_table(self, total_dict, title):
+        window = self.find_mdi_child(title)
+        if window:
+            self.central_widget.setActiveSubWindow(window)
+            return
+
+        alfa_widget = AlfaTotalTable(dictionary=total_dict, title=title)
+        self.central_widget.add_widget(alfa_widget)
 
     def find_mdi_child(self, title):
         for window in self.central_widget.subWindowList():

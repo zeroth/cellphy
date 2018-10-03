@@ -22,6 +22,7 @@ class AnalyzerWrapper(QMainWindow):
     display_channel_msd = QtCore.pyqtSignal(Channel)
     display_channel_ied = QtCore.pyqtSignal(Channel)
     display_channel_co_traffic = QtCore.pyqtSignal(Channel, bool, bool, bool)
+    display_bin_total = QtCore.pyqtSignal(dict, str)
 
     def __init__(self, files, parent=None):
         QMainWindow.__init__(self, parent)
@@ -108,6 +109,8 @@ class AnalyzerWrapper(QMainWindow):
             cotraffic_widget.pair_clicked.connect(self.__display_pair)
             cotraffic_widget.msd_clicked.connect(self.__msd_all_tracks)
             cotraffic_widget.show_channel.connect(self.display_channel_co_traffic)
+            cotraffic_widget.show_bin_total.connect(self.display_bin_total)
+
             self.tab_widget.insertTab(0, cotraffic_widget, cotraffic_widget.title)
 
         self.tab_widget.setCurrentIndex(0)
@@ -119,6 +122,7 @@ class AnalyzerWrapper(QMainWindow):
         group_cotraffic_widget.pair_clicked.connect(self.__display_pair)
         group_cotraffic_widget.msd_clicked.connect(self.__msd_all_tracks)
         group_cotraffic_widget.show_channel.connect(self.display_channel_co_traffic)
+        group_cotraffic_widget.show_bin_total.connect(self.display_bin_total)
         self.tab_widget.insertTab(0, group_cotraffic_widget, group_cotraffic_widget.title)
 
     def create_co_traffic_widgets(self, results, radius):

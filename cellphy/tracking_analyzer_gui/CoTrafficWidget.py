@@ -8,6 +8,7 @@ class CoTrafficWidget(QMainWindow):
     msd_clicked = QtCore.pyqtSignal(list, str)
     # Channel, vtk_on, show_ied, show_alfa_table
     show_channel = QtCore.pyqtSignal(Channel, bool, bool, bool)
+    show_bin_total = QtCore.pyqtSignal(dict, str)
 
     def __init__(self, data, radius, title = 'Untitled', parent=None):
         QMainWindow.__init__(self, parent)
@@ -99,12 +100,25 @@ class CoTrafficWidget(QMainWindow):
 
     def _display_bin(self, channel, bin_value):
         bin_tracks = channel.bin_tracks(binsize=bin_value)
-
+        total_dict = {}
         for sb, tb in bin_tracks.items():
             _channel = Channel(channel_name=f'{sb-bin_value}-{sb}_{self.radius}_{channel.suffix}',
                                suffix=channel.suffix, color=channel.base_color)
             _channel.set_track(tb)
+            if not total_dict.get(f'{sb-bin_value}-{sb}', False):
+                total_dict[f'{sb-bin_value}-{sb}'] = {'total': 0, 'lt': 0, 'gt': 0}
+
+            current = total_dict[f'{sb-bin_value}-{sb}']
+            current['total'] = len(tb)
+            for t in tb:
+                alfa, _ = t.basic_fit()
+                if alfa > 1.4:
+                    current['gt'] += 1
+                else:
+                    current['lt'] += 1
+
             self.show_channel.emit(_channel, False, False, True)
+        self.show_bin_total.emit(total_dict, f'{bin_value}-{self.radius}-{channel.suffix}')
 
     def _get_tracks_for_meta(self):
         pair_pick = self.data[0]
@@ -132,7 +146,7 @@ class CoTrafficWidget(QMainWindow):
         self.channel_b = Channel(channel_name=f'{self.radius}{tracks[1].suffix}',
                                  suffix=tracks[1].suffix, color=tracks[1].color)
         if extract_tracks:
-            for pair in self.data:
+            for _, pair in self.pairs.items():
                 if pair.track_a.suffix == self.channel_a.suffix:
                     self.channel_a.add_track(pair.track_a)
                     self.channel_b.add_track(pair.track_b)
