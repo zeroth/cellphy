@@ -239,7 +239,7 @@ class AnalysisToolWidget(QToolBar):
         self.spin_box.setMinimum(0)
         self.spin_box.setSingleStep(0.1)
 
-        self.analyse_btn = QPushButton('Analyze')
+        self.analyse_btn = QPushButton('Analyze CC')
         self.analyse_btn.clicked.connect(self.analyse_btn_clicked)
 
         self.radius_layout.addWidget(self.spin_box)

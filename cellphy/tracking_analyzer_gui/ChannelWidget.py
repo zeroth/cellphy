@@ -47,7 +47,7 @@ class ToolBarWidget(QToolBar):
 
     def __init__(self, parent=None):
         QToolBar.__init__(self, parent)
-        self.msd_btn = QPushButton('Display')
+        self.msd_btn = QPushButton('MSD & IED')
         self.msd_btn.clicked.connect(self.msd_button_clicked)
         self.addWidget(self.msd_btn)
 

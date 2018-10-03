@@ -34,7 +34,7 @@ class CoTrafficWidget(QMainWindow):
 
         self.tool_bar_top = self.addToolBar('CoTraffic toolbar')
         self.filter_box = QSpinBox()
-        self.filter_box.setPrefix('Filter Size')
+        self.filter_box.setPrefix('Min Time')
         self.filter_box.setMinimum(self.min_time_points)
         self.tool_bar_top.addWidget(self.filter_box)
         flt_action = QAction('Apply Filter', self)
@@ -43,7 +43,7 @@ class CoTrafficWidget(QMainWindow):
 
         self.tool_bar_top.addSeparator()
         self.bin_box = QSpinBox()
-        self.bin_box.setPrefix('Bin Size')
+        self.bin_box.setPrefix('Time Bin')
         self.bin_box.setMinimum(10)
         self.tool_bar_top.addWidget(self.bin_box)
 
