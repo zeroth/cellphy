@@ -98,7 +98,7 @@ class CoTrafficWidget(QMainWindow):
         channels, total_dict = channel.bin_tracks(bin_value=bin_value, radius=self.radius)
         for _channel in channels:
             self.show_channel.emit(_channel, False, False, True)
-        self.show_bin_total.emit(total_dict, f'{bin_value}-{self.radius:.1f}-{channel.suffix}')
+        self.show_bin_total.emit(total_dict, f'CT {bin_value}-{self.radius:.1f}-{channel.suffix}-{self.bin_value}')
 
     def _get_tracks_for_meta(self):
         pair_pick = self.data[0]
@@ -120,11 +120,16 @@ class CoTrafficWidget(QMainWindow):
     def __extract_channels(self, extract_tracks = True):
         # get the channel suffix
         tracks = self._get_tracks_for_meta()
-        self.channel_a = Channel(channel_name=f'{self.radius:.1f}{tracks[0].suffix}',
+        self.channel_a = Channel(channel_name=f'CT {self.radius:.1f}{tracks[0].suffix}',
                                  suffix=tracks[0].suffix, color=tracks[0].color)
 
-        self.channel_b = Channel(channel_name=f'{self.radius:.1f}{tracks[1].suffix}',
+        self.channel_b = Channel(channel_name=f'CT {self.radius:.1f}{tracks[1].suffix}',
                                  suffix=tracks[1].suffix, color=tracks[1].color)
+
+        self.channel_a.filter_size = self.min_time_points
+        self.channel_b.filter_size = self.min_time_points
+        self.channel_a.bin_value = self.bin_value
+        self.channel_b.bin_value = self.bin_value
 
         channel_a_tracks = []
         channel_b_tracks = []

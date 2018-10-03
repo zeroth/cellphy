@@ -46,7 +46,7 @@ class ChannelWidget(QMainWindow):
         _, track_dict = self.channel.bin_tracks(self.bin_value)
         print(f' after tracks {len(self.channel.tracks)}')
         self.display_msd_channel.emit(self.channel)
-        self.show_bin_total.emit(track_dict, f'{self.bin_value}-{self.channel.suffix}')
+        self.show_bin_total.emit(track_dict, f'{self.bin_value}-{self.channel.suffix}-{self.bin_value}')
 
     def apply_filter(self, value=4):
         self.channel.apply_filter(filter_value = value)
