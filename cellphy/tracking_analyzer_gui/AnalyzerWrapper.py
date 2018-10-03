@@ -23,6 +23,8 @@ class AnalyzerWrapper(QMainWindow):
     display_channel_ied = QtCore.pyqtSignal(Channel)
     display_channel_co_traffic = QtCore.pyqtSignal(Channel, bool, bool, bool)
     display_bin_total = QtCore.pyqtSignal(dict, str)
+    apply_filter = QtCore.pyqtSignal(int)
+    bin_updated = QtCore.pyqtSignal(int)
 
     def __init__(self, files, parent=None):
         QMainWindow.__init__(self, parent)
@@ -46,7 +48,9 @@ class AnalyzerWrapper(QMainWindow):
             self.channels.append(channel)
             channel_widget = ChannelWidget(channel, self)
             channel_widget.track_clicked.connect(self.__track_clicked)
-
+            channel_widget.show_bin_total.connect(self.display_bin_total)
+            self.apply_filter.connect(channel_widget.apply_filter)
+            self.bin_updated.connect(channel_widget.bin_updated)
             channel_widget.display_msd_channel.connect(self.display_channel_msd)
             # channel_widget.display_ied_channel.connect(self.display_channel_ied)
 
@@ -76,6 +80,8 @@ class AnalyzerWrapper(QMainWindow):
         self.display_msd_tracks.emit(tracks, title)
 
     def compare_tracks(self, radius):
+        for c in self.channels:
+            print(f'Total tracks {c.suffix} -  ', len(c.tracks))
         thread_pair = CompareThread(self.channels, radius)
         thread_pair.result_ready.connect(self.process_pairs)
         thread_pair.output.connect(self.parent.print)
@@ -110,6 +116,8 @@ class AnalyzerWrapper(QMainWindow):
             cotraffic_widget.msd_clicked.connect(self.__msd_all_tracks)
             cotraffic_widget.show_channel.connect(self.display_channel_co_traffic)
             cotraffic_widget.show_bin_total.connect(self.display_bin_total)
+            self.apply_filter.connect(cotraffic_widget.apply_filter)
+            self.bin_updated.connect(cotraffic_widget.bin_updated)
 
             self.tab_widget.insertTab(0, cotraffic_widget, cotraffic_widget.title)
 
@@ -123,30 +131,32 @@ class AnalyzerWrapper(QMainWindow):
         group_cotraffic_widget.msd_clicked.connect(self.__msd_all_tracks)
         group_cotraffic_widget.show_channel.connect(self.display_channel_co_traffic)
         group_cotraffic_widget.show_bin_total.connect(self.display_bin_total)
+        self.apply_filter.connect(group_cotraffic_widget.apply_filter)
+        self.bin_updated.connect(group_cotraffic_widget.bin_updated)
         self.tab_widget.insertTab(0, group_cotraffic_widget, group_cotraffic_widget.title)
 
-    def create_co_traffic_widgets(self, results, radius):
-        for result in results:
-            channel_a = result['c_a']
-            channel_b = result['c_b']
-            pair = result['pairs']
+    # def create_co_traffic_widgets(self, results, radius):
+    #     for result in results:
+    #         channel_a = result['c_a']
+    #         channel_b = result['c_b']
+    #         pair = result['pairs']
+    #
+    #         title = f'Radius - {radius:.1f} [{channel_a.name} & {channel_b.name}]'
+    #         # pair.to_csv(f'./{title}')
+    #         cotraffic_widget = CoTrafficWidget(pair, channel_a, channel_b, title)
+    #         cotraffic_widget.pair_clicked.connect(self.__display_pair)
+    #         cotraffic_widget.msd_clicked.connect(self.__msd_all_tracks)
+    #         self.tab_widget.insertTab(0, cotraffic_widget, cotraffic_widget.title)
+    #
+    #     self.tab_widget.setCurrentIndex(0)
+    #     self.tool_bar.enable_analyze_btn()
 
-            title = f'Radius - {radius:.1f} [{channel_a.name} & {channel_b.name}]'
-            # pair.to_csv(f'./{title}')
-            cotraffic_widget = CoTrafficWidget(pair, channel_a, channel_b, title)
-            cotraffic_widget.pair_clicked.connect(self.__display_pair)
-            cotraffic_widget.msd_clicked.connect(self.__msd_all_tracks)
-            self.tab_widget.insertTab(0, cotraffic_widget, cotraffic_widget.title)
-
-        self.tab_widget.setCurrentIndex(0)
-        self.tool_bar.enable_analyze_btn()
-
-    def create_common_co_traffic_widget(self, pairs, union, radius):
-        print(f'saving common file for radius {radius}')
-        for key, _ in pairs.items():
-            print(f'>> pair {key}')
-        print('saving union')
-        union.to_csv('./union_radius.csv')
+    # def create_common_co_traffic_widget(self, pairs, union, radius):
+    #     print(f'saving common file for radius {radius}')
+    #     for key, _ in pairs.items():
+    #         print(f'>> pair {key}')
+    #     print('saving union')
+    #     union.to_csv('./union_radius.csv')
 
 
 class CompareThread(QThread):

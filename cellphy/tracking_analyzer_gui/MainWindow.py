@@ -1,7 +1,7 @@
 import PyQt5.QtCore as QtCore
 
 from PyQt5.QtWidgets import QMainWindow, QTabWidget, QAction, \
-    QFileDialog, QStatusBar, QDockWidget, QTextEdit, QMessageBox, QSplitter
+    QFileDialog, QStatusBar, QDockWidget, QTextEdit, QMessageBox, QSplitter, QSpinBox
 
 from .CentralWdiget import CentralWidget
 from .AnalyzerWrapper import AnalyzerWrapper
@@ -12,12 +12,17 @@ from .AlfaTotalTable import AlfaTotalTable
 
 
 class MainWindow(QMainWindow):
+    apply_filter = QtCore.pyqtSignal(int)
+    bin_updated = QtCore.pyqtSignal(int)
+
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
         self.tool_bar = self.addToolBar('Main Toolbar')
         self.central_widget = CentralWidget(self)
         self.setCentralWidget(self.central_widget)
-
+        self.min_time_points = 4
+        self.bin_box = QSpinBox()
+        self.filter_box = QSpinBox()
         self.update_toolbar()
         # output window
         self.output_widget = QTextEdit()
@@ -65,6 +70,23 @@ class MainWindow(QMainWindow):
         cls_act.triggered.connect(self.central_widget.closeAllSubWindows)
         self.tool_bar.addAction(cls_act)
 
+        self.filter_box.setPrefix('Min Time')
+        self.filter_box.setMinimum(self.min_time_points)
+        self.tool_bar.addWidget(self.filter_box)
+        flt_action = QAction('Apply Filter', self)
+        flt_action.triggered.connect(self.__apply_filter)
+        self.tool_bar.addAction(flt_action)
+
+        self.tool_bar.addSeparator()
+
+        self.bin_box.setPrefix('Time Bin')
+        self.bin_box.setMinimum(0)
+        self.bin_box.valueChanged.connect(self.bin_updated)
+        self.tool_bar.addWidget(self.bin_box)
+
+    def __apply_filter(self):
+        self.apply_filter.emit(self.filter_box.value())
+
     def show_warning(self, text):
         msg_box = QMessageBox(self)
         msg_box.setText(text)
@@ -87,6 +109,9 @@ class MainWindow(QMainWindow):
         analyzer_widget.display_channel_msd.connect(self.display_channel)
         analyzer_widget.display_channel_co_traffic.connect(self.display_channel)
         analyzer_widget.display_bin_total.connect(self.display_alfa_table)
+        self.apply_filter.connect(analyzer_widget.apply_filter)
+        self.bin_updated.connect(analyzer_widget.bin_updated)
+
         self.analyzer_container.addTab(analyzer_widget, analyzer_widget.title)
         self.print('> done loading channels\n')
 
@@ -153,8 +178,8 @@ class MainWindow(QMainWindow):
         chart.setWindowTitle(title)
         self.central_widget.add_widget(chart)
 
-    def display_channel(self, channel, vtk_on=True, show_ied=True, show_alfa=False):
-        title = channel.name
+    def display_channel(self, channel, vtk_on=True, show_ied=True, show_alfa=True):
+        title = f'{channel.name}-{channel.suffix}-{channel.bin_value}-{channel.filter_size}'
 
         window = self.find_mdi_child(title)
         if window:

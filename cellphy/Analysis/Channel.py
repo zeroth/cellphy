@@ -17,10 +17,12 @@ class Channel:
         self.data_file = file_path
         self.raw_data = data
         self.tracks = []
+        self.tracks_backup = []
         self.tracks_hash_map = {}
         self.suffix = suffix
         self.header = header
-
+        self.filter_size = 4
+        self.bin_value = 0
         self.base_color = color
         self.max_time_point = 0
         self.time_point_position_map = {}
@@ -41,13 +43,22 @@ class Channel:
         self.track_ids = self.raw_data[f'trackid{self.suffix}'].unique()
 
         for _id in self.track_ids:
-            t = Track(track_id=_id, name=self.name, color=self.base_color, suffix=self.suffix,
-                      raw_data=self.raw_data[self.raw_data[f'trackid{self.suffix}'] == _id], parent=self)
+            if len(list(self.raw_data[self.raw_data[f'trackid{self.suffix}'] == _id]['time'])) >= 4:
+                t = Track(track_id=_id, name=self.name, color=self.base_color, suffix=self.suffix,
+                          raw_data=self.raw_data[self.raw_data[f'trackid{self.suffix}'] == _id], parent=self)
 
-            self.tracks.append(t)
-            self.tracks_hash_map[_id] = t
-
+                self.tracks_backup.append(t)
+        self.apply_filter(self.filter_size)
         self.max_time_point = self._get_max_time_point()
+
+    def apply_filter(self, filter_value=4):
+        self.filter_size = filter_value
+        self.tracks = []
+        self.tracks_hash_map = {}
+        for t in self.tracks_backup:
+            if len(t.time_position_map) >= filter_value:
+                self.tracks.append(t)
+                self.tracks_hash_map[t.track_id] = t
 
     def _get_max_time_point(self):
         times = []
@@ -55,11 +66,12 @@ class Channel:
             times.append(t.max_time_point)
         return max(times)
 
-    def add_track(self, _track):
-        self.tracks.append(_track)
+    # def add_track(self, _track):
+    #     self.tracks_backup.append(_track)
 
     def set_track(self, _tracks):
-        self.tracks = _tracks
+        self.tracks_backup = _tracks
+        self.apply_filter(self.filter_size)
 
     def get_time_point_position_map(self):
         # filter tracks
@@ -94,22 +106,55 @@ class Channel:
 
         return time_pos_distance_mean_map
 
-    def bin_tracks(self, binsize=10):
-        tracks_bin = {}
+    def bin_tracks(self, bin_value=0, radius=0):
+        # tracks_bin = {}
+        total_dict = {}
+        _channels = []
+        self.bin_value = bin_value
         # it_track = copy.deepcopy(self.tracks)
-        m_track = self.tracks
-        for sb in range(0, self._get_max_time_point(), binsize):
-            it_track = m_track
-            # print(f'len(it_track){len(it_track)}')
-            for t in it_track:
-                tk = np.array(list(t.time_position_map.keys()))
-                if np.any((sb >= tk) * (sb <= (sb+binsize))):
-                    if not tracks_bin.get(sb, False):
-                        tracks_bin[sb] = []
-                    tracks_bin[sb].append(t)
-                    m_track.remove(t)
+        m_track = self.tracks.copy()
+        if bin_value:
+            for sb in range(0, self._get_max_time_point(), bin_value):
+                it_track = m_track.copy()
+                # print(f'len(it_track){len(it_track)}')
+                tb = []
+                for t in it_track:
+                    tk = np.array(list(t.time_position_map.keys()))
+                    if np.any((sb >= tk) * (sb <= (sb + bin_value))):
+                        # if not tracks_bin.get(sb, False):
+                        #     tracks_bin[sb] = []
+                        # tracks_bin[sb].append(t)
+                        tb.append(t)
+                        m_track.remove(t)
+                if len(tb) > 0:
+                    _channel = Channel(channel_name=f'{sb-bin_value}-{sb}_{radius:.1f}',
+                                       suffix=self.suffix, color=self.base_color.copy())
+                    _channel.set_track(tb)
+                    _channels.append(_channel)
+                    if not total_dict.get(f'{sb-bin_value}-{sb}', False):
+                        total_dict[f'{sb-bin_value}-{sb}'] = {'total': 0, 'lt': 0, 'gt': 0}
 
-        return tracks_bin
+                    current = total_dict[f'{sb-bin_value}-{sb}']
+                    current['total'] = len(tb)
+                    for t in tb:
+                        alfa, _ = t.basic_fit()
+                        if alfa > 1.4:
+                            current['gt'] += 1
+                        else:
+                            current['lt'] += 1
+        else:
+            _channels.append(self)
+            total_dict[f'all'] = {'total': 0, 'lt': 0, 'gt': 0}
+            current = total_dict[f'all']
+            current['total'] = len(self.tracks)
+            for t in self.tracks:
+                alfa, _ = t.basic_fit()
+                if alfa > 1.4:
+                    current['gt'] += 1
+                else:
+                    current['lt'] += 1
+
+        return _channels, total_dict
 
     def size(self):
         return len(self.tracks)
