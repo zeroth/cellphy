@@ -266,7 +266,7 @@ class MSDWidget(QMainWindow):
 
     def get_alfa_color(self, alfa):
         yellow = [255, 255, 0, 128]
-        cyan = [0, 255, 255, 128]
+        cyan = [0, 183, 235, 128]
         magenta= [255, 0, 255, 128]
 
         if alfa < 0.4:
