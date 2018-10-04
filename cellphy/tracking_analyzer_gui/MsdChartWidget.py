@@ -53,8 +53,10 @@ class ScatterSeries(QScatterSeries):
         self.y = np.array(y)
         self.x = np.array(x)
 
-        self.setColor(QColor(color[0], color[1], color[2], 255))
+        self.setColor(QColor(color[0], color[1], color[2], 0))
         self.setPen(QPen(QBrush(self.color()), 2))
+        self.setBorderColor(QColor(color[0], color[1], color[2], 255))
+        self.setMarkerSize(10)
         self.setName(name)
         for i, p in enumerate(self.y):
             self.append(self.x[i], p)
@@ -111,13 +113,13 @@ class ChartViewWrapper(QMainWindow):
 class MSDWidget(QMainWindow):
     msd_line_clicked = QtCore.pyqtSignal(Track)
 
-    def __init__(self, source_list, title, vtk_on=True, show_alfa_table=False, parent=None):
+    def __init__(self, source_list, title, change_color=True, vtk_on=True, show_alfa_table=False, parent=None):
         QMainWindow.__init__(self, parent)
         self.vtk_on = vtk_on
         self.show_alfa_table = show_alfa_table
         self.setWindowTitle(title)
         self.title = title
-
+        self.change_color = change_color
         self.central_widget = QSplitter(self)
         self.setCentralWidget(self.central_widget)
 
@@ -129,6 +131,8 @@ class MSDWidget(QMainWindow):
         if type(source_list[0]) is Channel:
             self.init_channels(source_list)
         else:
+            if self.change_color:
+                self.base_channel_color = source_list[0].color.copy()
             self.init_tracks(source_list)
 
     def init_channels(self, source_list):
@@ -140,12 +144,13 @@ class MSDWidget(QMainWindow):
             if len(track.time_position_map) > 3:
                 tracks.append(track)
 
+        msd_widget, msd_widget_velocity, alfa_all, alfa_lt_1_4, \
+            alfa_gt_1_4, alfa_gt_1_4_v, alfa_gt_1_4_n = self.get_msd_chart(tracks)
+
+        # keeping this after MSD for change color to take effect
         if self.vtk_on:
             vtk_widget = self.get_vtk_widget(tracks)
             self.central_widget.addWidget(vtk_widget)
-
-        msd_widget, msd_widget_velocity, alfa_all, alfa_lt_1_4, \
-            alfa_gt_1_4, alfa_gt_1_4_v, alfa_gt_1_4_n = self.get_msd_chart(tracks)
 
         if self.show_alfa_table:
             alfa_table_widget = AlfaWidget(alfa_all, alfa_lt_1_4, alfa_gt_1_4, alfa_gt_1_4_v, alfa_gt_1_4_n)
@@ -159,10 +164,14 @@ class MSDWidget(QMainWindow):
     def get_vtk_widget(self, tracks):
         widget = VTKWidget(self)
         for track in tracks:
-            widget.add_track(track)
+            if self.change_color:
+                alfa, _ = track.basic_fit()
+                widget.add_track(track, updated_color=self.get_alfa_color(alfa))
+            else:
+                widget.add_track(track)
             # self.print(track_pos)
         widget.render_lines()
-        self.msd_line_clicked.connect(widget.highlight_track)
+        # self.msd_line_clicked.connect(widget.highlight_track)
         return widget
 
     def get_msd_chart(self, tracks):
@@ -183,14 +192,14 @@ class MSDWidget(QMainWindow):
             y = np.array(list(track.msd(limit=26)))
             max_y.append(y.max())
             x = np.array(list(range(1, len(y) + 1))) * 3.8
-            scattered_line = ScatterSeries(x, y, track, track.color, track.name)
+            scattered_line = ScatterSeries(x, y, track, self.base_channel_color if self.change_color else track.color, track.name)
             scattered_line.selected.connect(self.msd_line_clicked)
 
             chart.addSeries(scattered_line)
 
             alfa, __y = track.basic_fit()
             alfa_all.append(alfa)
-            line_series = LineSeries(x, __y, track, track.color, track.name)
+            line_series = LineSeries(x, __y, track, self.get_alfa_color(alfa) if self.change_color else track.color, track.name)
             line_series.selected.connect(self.msd_line_clicked)
             chart.addSeries(line_series)
             if alfa > 1.4:
@@ -199,9 +208,9 @@ class MSDWidget(QMainWindow):
                 _alfa, _velocity, _y = track.velocity_fit()
                 alfa_gt_1_4_n.append(_alfa)
                 alfa_gt_1_4_v.append(_velocity)
-                _line_series = LineSeries(x, _y, track, track.color, track.name)
+                _line_series = LineSeries(x, _y, track, self.get_alfa_color(alfa) if self.change_color else track.color, track.name)
                 _line_series.selected.connect(self.msd_line_clicked)
-                _scattered_line = ScatterSeries(x, y, track, track.color, track.name)
+                _scattered_line = ScatterSeries(x, y, track, self.base_channel_color if self.change_color else track.color, track.name)
                 _scattered_line.selected.connect(self.msd_line_clicked)
                 chart_v.addSeries(_line_series)
                 chart_v.addSeries(_scattered_line)
@@ -254,6 +263,18 @@ class MSDWidget(QMainWindow):
                 chart_v.legend().setVisible(False)
 
         return chart_view_wrapper, result, alfa_all, alfa_lt_1_4, alfa_gt_1_4, alfa_gt_1_4_v, alfa_gt_1_4_n
+
+    def get_alfa_color(self, alfa):
+        yellow = [255, 255, 0, 128]
+        cyan = [0, 255, 255, 128]
+        magenta= [255, 0, 255, 128]
+
+        if alfa < 0.4:
+            return yellow
+        elif 0.4 <= alfa <= 1.4:
+            return cyan
+        else:
+            return magenta
 
 
 class AlfaWidget(QMainWindow):

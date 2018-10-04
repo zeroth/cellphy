@@ -157,7 +157,7 @@ class MainWindow(QMainWindow):
             self.central_widget.setActiveSubWindow(window)
             return
 
-        chart = MSDWidget(tracks, title)
+        chart = MSDWidget(tracks, title, change_color=False)
         chart.msd_line_clicked.connect(self.display_track)
         # chart.bar_clicked.connect(vtk_widget.display_points)
 
@@ -172,7 +172,7 @@ class MainWindow(QMainWindow):
             self.central_widget.setActiveSubWindow(window)
             return
 
-        chart = MSDWidget(tracks, title)
+        chart = MSDWidget(tracks, title, change_color=False)
         chart.msd_line_clicked.connect(self.display_track)
 
         chart.setWindowTitle(title)

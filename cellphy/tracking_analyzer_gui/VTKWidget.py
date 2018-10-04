@@ -56,9 +56,9 @@ class VTKWidget(QVTKRenderWindowInteractor):
 
         self.ren.AddActor(self.actor)
 
-    def add_track(self, track):
-        color = track.color
-        color[-1] = 255
+    def add_track(self, track, updated_color = []):
+        color = updated_color if len(updated_color)> 1 else track.color
+        # color[-1] = 255
         self.create_line(list(track.time_position_map.values()), color)
         self.tracks.append(track)
 
