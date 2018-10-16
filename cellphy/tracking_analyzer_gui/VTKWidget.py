@@ -55,6 +55,7 @@ class VTKWidget(QVTKRenderWindowInteractor):
         self.actor.GetProperty().SetRenderLinesAsTubes(True)
 
         self.ren.AddActor(self.actor)
+        self.ren.SetBackground(1, 1, 1)
 
     def add_track(self, track, updated_color = []):
         color = updated_color if len(updated_color)> 1 else track.color
