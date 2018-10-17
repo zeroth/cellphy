@@ -202,7 +202,7 @@ class MSDWidget(QMainWindow):
             line_series = LineSeries(x, __y, track, self.get_alfa_color(alfa) if self.change_color else track.color, track.name)
             line_series.selected.connect(self.msd_line_clicked)
             chart.addSeries(line_series)
-            if alfa > 1.4:
+            if alfa > 1.2:
                 alfa_gt_1_4.append(alfa)
                 _init = np.array([.001, .01, .01])
                 _alfa, _velocity, _y = track.velocity_fit()
@@ -271,7 +271,7 @@ class MSDWidget(QMainWindow):
 
         if alfa < 0.4:
             return yellow
-        elif 0.4 <= alfa <= 1.4:
+        elif 0.4 <= alfa <= 1.2:
             return cyan
         else:
             return magenta
@@ -298,7 +298,7 @@ class AlfaWidget(QMainWindow):
         self.create_csv_act = QAction('Export')
         self.create_csv_act.triggered.connect(self.export_csv)
         self.tool_bar.addAction(self.create_csv_act)
-        self.headers = ['Alfa', 'Alfa < 1.4', 'Alfa > 1.4', 'New Alfa >1.4', 'Velocity']
+        self.headers = ['Alfa', 'Alfa < 1.2', 'Alfa > 1.2', 'New Alfa >1.2', 'Velocity']
         self.prepare_table()
 
     def prepare_table(self):
