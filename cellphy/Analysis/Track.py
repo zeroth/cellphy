@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import numpy as np
 from scipy.optimize import curve_fit
+import itertools
 
 
 def fit_function(delta, d, alfa):
@@ -9,6 +10,7 @@ def fit_function(delta, d, alfa):
 
 def fit_velocity_function(delta, d, alfa, v):
     return (4*d) * np.power(delta, alfa) + (np.power(v, 2) * np.power(delta, 2))
+
 
 def distance(a, b):
     return np.sqrt(np.sum((np.array(a) - np.array(b)) ** 2))
@@ -62,6 +64,10 @@ class Track:
             _mean = msd_t / float(len(_track) - tau)
             yield _mean
             tau += 1
+
+    def ied_distance(self):
+        for p1, p2 in itertools.combinations(list(self.time_position_map.values()), 2):
+            yield distance(p1, p2)
 
     def basic_fit(self):
 

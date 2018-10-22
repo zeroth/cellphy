@@ -97,7 +97,7 @@ class CoTrafficWidget(QMainWindow):
     def _display_bin(self, channel, bin_value):
         channels, total_dict = channel.bin_tracks(bin_value=bin_value, radius=self.radius)
         for _channel in channels:
-            self.show_channel.emit(_channel, True, False, True)
+            self.show_channel.emit(_channel, True, True, True)
         self.show_bin_total.emit(total_dict, f'CT {bin_value}-{self.radius:.1f}-{channel.suffix}-{self.bin_value}')
 
     def _get_tracks_for_meta(self):

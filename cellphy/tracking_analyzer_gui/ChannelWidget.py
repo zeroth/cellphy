@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QPushButton, QToolBar, QMainWindow
+from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QPushButton, QToolBar, QMainWindow, QFileDialog
 import PyQt5.QtCore as QtCore
 from cellphy.Analysis.Track import Track
 from cellphy.Analysis.Channel import Channel
@@ -18,6 +18,7 @@ class ChannelWidget(QMainWindow):
         self.tool_bar = ToolBarWidget(self)
 
         self.tool_bar.msd_button_clicked.connect(self.__msd_channel)
+        # self.tool_bar.distance_button_clicked.connect(self.__export_distance)
 
         self.addToolBar(self.tool_bar)
 
@@ -48,6 +49,28 @@ class ChannelWidget(QMainWindow):
         self.display_msd_channel.emit(self.channel)
         self.show_bin_total.emit(track_dict, f'{self.bin_value}-{self.channel.suffix}-{self.bin_value}')
 
+    def __export_distance(self):
+        headers = ['TrackId', 'Distance']
+        _csv = ''
+        # get headers 1st
+        _csv += ','.join(headers) + '\n'
+
+        # now get the data
+        for track in self.channel.tracks:
+            # track.ied_distance()
+            for distance in track.ied_distance():
+                row_vals = list()
+                row_vals.append(str(track.track_id))
+                row_vals.append(str(distance))
+                _csv += ','.join(row_vals) + '\n'
+
+        file, _ = QFileDialog.getSaveFileName(self, "Select file name Distance .csv files",
+                                              QtCore.QDir.homePath(), "CSV (*.csv)")
+
+        fd = open(file, 'w')
+        fd.write(_csv)
+        fd.close()
+
     def apply_filter(self, value=4):
         self.channel.apply_filter(filter_value = value)
         self.populate_items()
@@ -61,11 +84,16 @@ class ChannelWidget(QMainWindow):
 
 class ToolBarWidget(QToolBar):
     msd_button_clicked = QtCore.pyqtSignal()
+    # distance_button_clicked = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         QToolBar.__init__(self, parent)
         self.msd_btn = QPushButton('MSD & IED & Alfa')
         self.msd_btn.clicked.connect(self.msd_button_clicked)
         self.addWidget(self.msd_btn)
+
+        # self.distance_btn = QPushButton('Export Distance')
+        # self.distance_btn.clicked.connect(self.distance_button_clicked)
+        # self.addWidget(self.distance_btn)
 
 
