@@ -144,8 +144,8 @@ class MSDWidget(QMainWindow):
             if len(track.time_position_map) > 3:
                 tracks.append(track)
 
-        msd_widget, msd_widget_velocity, alfa_all, alfa_lt_1_4, \
-            alfa_gt_1_4, alfa_gt_1_4_v, alfa_gt_1_4_n = self.get_msd_chart(tracks)
+        msd_widget, msd_widget_velocity, alfa_all, alfa_lt_0_4, alfa_bt_0_4_1_2, \
+        alfa_gt_1_2, alfa_gt_1_2_n, alfa_gt_1_2_v = self.get_msd_chart(tracks)
 
         # keeping this after MSD for change color to take effect
         if self.vtk_on:
@@ -153,7 +153,7 @@ class MSDWidget(QMainWindow):
             self.central_widget.addWidget(vtk_widget)
 
         if self.show_alfa_table:
-            alfa_table_widget = AlfaWidget(alfa_all, alfa_lt_1_4, alfa_gt_1_4, alfa_gt_1_4_v, alfa_gt_1_4_n)
+            alfa_table_widget = AlfaWidget(alfa_all, alfa_lt_0_4, alfa_bt_0_4_1_2, alfa_gt_1_2, alfa_gt_1_2_n, alfa_gt_1_2_v)
             self.central_widget.addWidget(alfa_table_widget)
 
         self.central_widget.addWidget(msd_widget)
@@ -183,10 +183,11 @@ class MSDWidget(QMainWindow):
         max_y = []
         need_velocity = False
         alfa_all = []
-        alfa_lt_1_4 = []
-        alfa_gt_1_4 = []
-        alfa_gt_1_4_v = []
-        alfa_gt_1_4_n = []
+        alfa_lt_0_4 = []
+        alfa_bt_0_4_1_2 = []
+        alfa_gt_1_2 = []
+        alfa_gt_1_2_v = []
+        alfa_gt_1_2_n = []
 
         for track in tracks:
             y = np.array(list(track.msd(limit=26)))
@@ -202,12 +203,16 @@ class MSDWidget(QMainWindow):
             line_series = LineSeries(x, __y, track, self.get_alfa_color(alfa) if self.change_color else track.color, track.name)
             line_series.selected.connect(self.msd_line_clicked)
             chart.addSeries(line_series)
-            if alfa > 1.2:
-                alfa_gt_1_4.append(alfa)
+            if alfa < 0.4:
+                alfa_lt_0_4.append(alfa)
+            elif 0.4 < alfa < 1.2:
+                alfa_bt_0_4_1_2.append(alfa)
+            elif alfa > 1.2:
+                alfa_gt_1_2.append(alfa)
                 _init = np.array([.001, .01, .01])
                 _alfa, _velocity, _y = track.velocity_fit()
-                alfa_gt_1_4_n.append(_alfa)
-                alfa_gt_1_4_v.append(_velocity)
+                alfa_gt_1_2_n.append(_alfa)
+                alfa_gt_1_2_v.append(_velocity)
                 _line_series = LineSeries(x, _y, track, self.get_alfa_color(alfa) if self.change_color else track.color, track.name)
                 _line_series.selected.connect(self.msd_line_clicked)
                 _scattered_line = ScatterSeries(x, y, track, self.base_channel_color if self.change_color else track.color, track.name)
@@ -215,8 +220,6 @@ class MSDWidget(QMainWindow):
                 chart_v.addSeries(_line_series)
                 chart_v.addSeries(_scattered_line)
                 need_velocity = True
-            else:
-                alfa_lt_1_4.append(alfa)
 
         chart_view_wrapper.chart_view.setChart(chart)
 
@@ -262,7 +265,7 @@ class MSDWidget(QMainWindow):
             if len(tracks) > 2:
                 chart_v.legend().setVisible(False)
 
-        return chart_view_wrapper, result, alfa_all, alfa_lt_1_4, alfa_gt_1_4, alfa_gt_1_4_v, alfa_gt_1_4_n
+        return chart_view_wrapper, result, alfa_all, alfa_lt_0_4, alfa_bt_0_4_1_2, alfa_gt_1_2, alfa_gt_1_2_n, alfa_gt_1_2_v
 
     def get_alfa_color(self, alfa):
         yellow = [255, 255, 0, 128]
@@ -282,14 +285,15 @@ class AlfaWidget(QMainWindow):
     display_msd_channel = QtCore.pyqtSignal(Channel)
     display_ied_channel = QtCore.pyqtSignal(Channel)
 
-    def __init__(self, alfa, alfa_lt_1_4, alfa_gt_1_4, alfa_gt_1_4_v, alfa_gt_1_4_n, parent=None):
+    def __init__(self, alfa, alfa_lt_0_4, alfa_bt_0_4_1_2, alfa_gt_1_2, alfa_gt_1_2_n, alfa_gt_1_2_v, parent=None):
         QMainWindow.__init__(self, parent)
 
         self.alfa = alfa
-        self.alfa_lt_1_4 = alfa_lt_1_4
-        self.alfa_gt_1_4 = alfa_gt_1_4
-        self.alfa_gt_1_4_v = alfa_gt_1_4_v
-        self.alfa_gt_1_4_n = alfa_gt_1_4_n
+        self.alfa_lt_0_4 = alfa_lt_0_4
+        self.alfa_bt_0_4_1_2 = alfa_bt_0_4_1_2
+        self.alfa_gt_1_2 = alfa_gt_1_2
+        self.alfa_gt_1_2_n = alfa_gt_1_2_n
+        self.alfa_gt_1_2_v = alfa_gt_1_2_v
 
         self.table_widget = QTableWidget()
         self.tool_bar = self.addToolBar('Alfa ToolBar')
@@ -298,7 +302,7 @@ class AlfaWidget(QMainWindow):
         self.create_csv_act = QAction('Export')
         self.create_csv_act.triggered.connect(self.export_csv)
         self.tool_bar.addAction(self.create_csv_act)
-        self.headers = ['Alfa', 'Alfa < 1.2', 'Alfa > 1.2', 'New Alfa >1.2', 'Velocity']
+        self.headers = ['Alfa', 'Alfa < 0.4', 'Alfa 0.4 <> 1.2', 'Alfa > 1.2', 'New Alfa >1.2', 'Velocity']
         self.prepare_table()
 
     def prepare_table(self):
@@ -309,29 +313,35 @@ class AlfaWidget(QMainWindow):
             table_item = QTableWidgetItem(str(alfa))
             self.table_widget.setItem(row, 0, table_item)
 
-        for row, alt1 in enumerate(self.alfa_lt_1_4):
+        for row, alt1 in enumerate(self.alfa_lt_0_4):
             if self.table_widget.rowCount() < (row +1):
                 self.table_widget.setRowCount(row+1)
             table_item = QTableWidgetItem(str(alt1))
             self.table_widget.setItem(row, 1, table_item)
 
-        for row, agt1 in enumerate(self.alfa_gt_1_4):
+        for row, abt1 in enumerate(self.alfa_bt_0_4_1_2):
+            if self.table_widget.rowCount() < (row +1):
+                self.table_widget.setRowCount(row+1)
+            table_item = QTableWidgetItem(str(abt1))
+            self.table_widget.setItem(row, 2, table_item)
+
+        for row, agt1 in enumerate(self.alfa_gt_1_2):
             if self.table_widget.rowCount() < (row +1):
                 self.table_widget.setRowCount(row+1)
             table_item = QTableWidgetItem(str(agt1))
-            self.table_widget.setItem(row, 2, table_item)
+            self.table_widget.setItem(row, 3, table_item)
 
-        for row, agt1n in enumerate(self.alfa_gt_1_4_n):
+        for row, agt1n in enumerate(self.alfa_gt_1_2_n):
             if self.table_widget.rowCount() < (row +1):
                 self.table_widget.setRowCount(row+1)
             table_item = QTableWidgetItem(str(agt1n))
-            self.table_widget.setItem(row, 3, table_item)
-
-        for row, agt1v in enumerate(self.alfa_gt_1_4_v):
-            if self.table_widget.rowCount() < (row +1):
-                self.table_widget.setRowCount(row+1)
-            table_item = QTableWidgetItem(str(agt1v))
             self.table_widget.setItem(row, 4, table_item)
+
+        for row, agt1v in enumerate(self.alfa_gt_1_2_v):
+            if self.table_widget.rowCount() < (row + 1):
+                self.table_widget.setRowCount(row + 1)
+            table_item = QTableWidgetItem(str(agt1v))
+            self.table_widget.setItem(row, 5, table_item)
 
     def export_csv(self):
         _csv = ''
