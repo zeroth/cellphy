@@ -1,4 +1,4 @@
-# cellphy
+# Cellphy
 CellphyLab Analytical Tools For Co-Tracking Analysis
 
 # Install
