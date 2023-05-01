@@ -90,8 +90,6 @@ dependencies:
   - prompt_toolkit=1.0.15
   - pyasn1=0.4.4
   - pyasn1-modules=0.2.2
-  - pyculib=1.0.2
-  - pyculib_sorting=1.0.0
   - pygments=2.2.0
   - pyopenssl=18.0.0
   - pyparsing=2.2.0
@@ -125,6 +123,5 @@ dependencies:
   - zlib=1.2.11
   - zope=1.0
   - zope.interface=4.5.0
-  - llspylibs=0.1.2
 prefix: /home/cellphylab/anaconda3/envs/cellphy
 
